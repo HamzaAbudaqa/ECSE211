@@ -7,10 +7,10 @@ It should be run on your computer, not on the robot.
 Before running this script for the first time, you must install the dependencies
 as explained in the README.md file.
 """
-
+import numpy as np
 from matplotlib import pyplot as plt
 
-US_SENSOR_DATA_FILE = "us_sensor.csv"
+US_SENSOR_DATA_FILE = "data/subteam1/us_sensor_30cm.csv"
 DELAY_SEC = 0.01
 
 with open(US_SENSOR_DATA_FILE, "r") as f:
@@ -24,3 +24,5 @@ plt.xlabel("Time (s)")
 plt.ylabel("Distance (cm)")
 plt.yticks([d for d in range(round(max(distances)) + 10) if d % 10 == 0])
 plt.show()
+print("Displaying min,max,mean,stdev\n")
+print(min(distances), max(distances), np.mean(distances), np.std(distances) )
