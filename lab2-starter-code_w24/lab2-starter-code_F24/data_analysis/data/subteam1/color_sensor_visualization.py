@@ -29,15 +29,7 @@ red, green, blue = [], [], []
 with open(COLOR_SENSOR_DATA_FILE, "r") as f:
     for line in f.readlines():
         r, g, b = literal_eval(line)  # convert string to 3 floats
-        # normalize the values to be between 0 and 1
-
-        ### UNIT-VECTOR METHOD ###
-        # denominator = sqrt(r ** 2 + g ** 2 + b ** 2)
-
-        ### RATIO METHOD ###
-
-        
-        red.append(r)
+        red.append(r) #subgroup 1, values are already normalized, they can be appended
         green.append(g)
         blue.append(b)
 

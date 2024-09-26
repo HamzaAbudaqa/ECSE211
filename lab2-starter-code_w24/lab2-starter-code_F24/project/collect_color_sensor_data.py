@@ -24,8 +24,8 @@ def collect_color_sensor_data():
         output_file = open(COLOR_SENSOR_DATA_FILE, "w")
         while True:
                 if TOUCH_SENSOR.is_pressed():
-                    red, gre, blu, lum = COLOR_SENSOR.get_value()
-                    norm_red, norm_gre, norm_blu = normalize_rgb(red, gre, blu)
+                    red, gre, blu, lum = COLOR_SENSOR.get_value() #get our r,g,b values from the sensor
+                    norm_red, norm_gre, norm_blu = normalize_rgb(red, gre, blu) #normalizes the rgb values from our sensor
                     output_file.write('R={:d},G={:d},B={:d}\n'.format(norm_red,norm_gre,norm_blu))
         
     except BaseException:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
@@ -37,7 +37,10 @@ def collect_color_sensor_data():
 
 def normalize_rgb(r, g, b):
      sum_rgb = r + g + b
-     return r/sum_rgb, g/sum_rgb, b/sum_rgb
+     if sum_rgb == 0:
+         return 0, 0, 0
+     else :
+        return r/sum_rgb, g/sum_rgb, b/sum_rgb
      
 
 if __name__ == "__main__":
