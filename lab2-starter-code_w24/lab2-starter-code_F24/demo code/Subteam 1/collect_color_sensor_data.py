@@ -6,7 +6,7 @@ It must be run on the robot.
 """
 
 # Add your imports here, if any
-from utils.brick import EV3ColorSensor, wait_ready_sensors, TouchSensor
+from utils.brick import EV3ColorSensor, wait_ready_sensors, TouchSensor,reset_brick
 import time
 
 COLOR_SENSOR_DATA_FILE = "../data_analysis/color_sensor.csv"
@@ -38,6 +38,7 @@ def collect_color_sensor_data():
         pass
     finally:
         print("Done collecting CS RGB samples")
+        reset_brick()
         output_file.close()
         exit()
 
