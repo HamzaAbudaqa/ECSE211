@@ -1,5 +1,5 @@
 import time
-from utils.brick import MOtor
+from ..utils.brick import Motor
 
 motor = Motor(1)
 
