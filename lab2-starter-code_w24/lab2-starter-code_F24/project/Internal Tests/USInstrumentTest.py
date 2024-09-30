@@ -100,9 +100,9 @@ def rythm(m1, period) :
     motor = Motor(m1)
     motor.reset_encoder()
     motor.set_position(90)  # rotates 90
-    sleep(1)
+    sleep(period)
     motor.set_position(0)
-    sleep(1)
+    sleep(period)
 
 def rythmFunction(m1, period) :
     while True : rythm(m1, period)
