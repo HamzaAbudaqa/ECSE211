@@ -13,21 +13,27 @@ print("Done waiting.")
 
 def playInstrument() :
     playSensor = TouchSensor(3)
+    stopSensor = TouchSensor(2)
     try:
         setup(1)
-        motorThread = threading.Thread(target=rythmFunction, args=(1, 1))
-        while True :
-            mod = 2
-            motorOn = False
-            while ~waitUntilLongPress(1) :
-                mod = changeOctave(mod,1)
-                motorOn = setMotorOn(3,motorOn)
+        motorThread = threading.Thread(target=rythmFunction, args=(1, 1)) #make a thread for playing percussion in parallel to flute
+        mod = 2
+        motorOn = False
+        while ~stopSensor.is_pressed() :
+            while ~waitUntilLongPress(1): #setup phase
+                mod = changeOctave(mod, 1)
+                motorOn = setMotorOn(3, motorOn)
+            instrumentThread = threading.Thread(target=instrumentFunction,args=(playSensor, mod, 1, 1, 0.5, 20))
+
             if motorOn: motorThread.start()
-            while ~waitUntilLongPress(1) :
-                averageDistance = sampleAverageDistance(1, 20)
-                print(f"Current distance{averageDistance}\n")
-                if playSensor.is_pressed(): playNote(mod,averageDistance,0.5)
-            motorThread.join()
+            instrumentThread.start()
+            instrumentThread.join()
+            if motorOn: motorThread.join()
+
+
+
+
+
     finally:
         print("Byebye hooman")
         reset_brick() # Turn off everything on the brick's hardware, and reset it
@@ -64,6 +70,7 @@ def changeOctave(oldMod, t1) :
 
     """
     T1 = TouchSensor(t1)
+    sleep(0.2)
     if T1.is_pressed() & oldMod < 3:
         return oldMod + 0.25
     elif T1.is_pressed() & oldMod == 3:
@@ -72,6 +79,7 @@ def changeOctave(oldMod, t1) :
 
 def setMotorOn(t3, oldMotorOn) :
     touch = TouchSensor(t3)
+    sleep(0.1)
     if touch.is_pressed(): return ~oldMotorOn
     return oldMotorOn
 
@@ -114,6 +122,13 @@ def setup(t1) :
     print("Touch sensor pressed")
     sleep(1)
     print("Starting sensors")
+
+def instrumentFunction(playSensor, mod,t1,u1,duration, precision) :
+    while ~waitUntilLongPress(t1):
+        averageDistance = sampleAverageDistance(u1, precision)
+        print(f"Current distance{averageDistance}\n")
+        if playSensor.is_pressed(): playNote(mod, averageDistance, duration)
+
 
 if __name__ == "__main__":
     playInstrument()
