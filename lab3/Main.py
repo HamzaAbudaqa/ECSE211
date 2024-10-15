@@ -1,7 +1,33 @@
 import threading, logging, subprocess
-from utils.brick import TouchSensor, wait_ready_sensors
+from utils.brick import TouchSensor, wait_ready_sensors, Motor
+import time
 
-TOUCH_SENSOR = TouchSensor(2)
+
+EMERG_SENSOR = TouchSensor(3)
+STARTSTOP = TouchSensor (1)
+DRUM_MOTOR = Motor('B')  # Motor for the drumming mechanism# Button sensor for triggering drumming
+DRUM_DELAY = 0.15  # sec
+
+stop_event = threading.Event()
+end_event = threading.Event()
+
+def start_drumming():
+    while not end_event.is_set() :
+        if not stop_event.is_set() :
+            DRUM_MOTOR.set_limits(power=70)  # Limit power to avoid damage
+            time.sleep(.5)
+            DRUM_MOTOR.set_position(60)
+
+            time.sleep(DRUM_DELAY)
+            DRUM_MOTOR.set_position(0)
+            time.sleep(DRUM_DELAY)
+        else :
+            time.sleep(0.05)
+    
+
+rythm = threading.Thread(target=start_drumming)
+
+
 
 def start_rythm():
     logging.info("Starting the Rythm.py")
@@ -12,27 +38,21 @@ def start_notes():
     subprocess.run(["python3", "Notes.py"])
 
 def emergency_stop():
-    logging.info("Emergency stop triggered")
-    exit()
+    print("AAAAAAA")
+    end_event.set()
+    rythm.join()
 
-
-def create_threads():
-
-    rythm = threading.Thread(target=start_rythm)
-    notes = threading.Thread(target=start_rythm)
-
-    rythm.daemon = True
-    notes.daemon = True
-
-    rythm.start()
-    notes.start()
 
 if __name__ == "__main__":
-    create_threads()
+    rythm.start()
     try:
         while True:
-            if TOUCH_SENSOR.is_pressed():
+            if EMERG_SENSOR.is_pressed():
                 emergency_stop()
+            if STARTSTOP.is_pressed() and stop_event.is_set():
+                stop_event.clear()
+            elif STARTSTOP.is_pressed() and not stop_event.is_set():
+                stop_event.set()
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         logging.exception(e)
         exit()
