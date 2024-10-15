@@ -22,6 +22,7 @@ def create_threads():
     rythm.start()
 
 if __name__ == "__main__":
+    create_threads()
     try:
         while True:
             if TOUCH_SENSOR.is_pressed():
