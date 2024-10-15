@@ -17,9 +17,8 @@ def sampleAverageDistance(u, precision) :
 
 def playSound(US) :
     us = EV3UltrasonicSensor(US)
-    while True:
-        distance = sampleAverageDistance(US, 5)
-        playNote(distance, 0.3)
+    distance = sampleAverageDistance(US, 5)
+    playNote(distance, 0.3)
     return
 
 
