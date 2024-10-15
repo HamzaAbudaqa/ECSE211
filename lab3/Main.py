@@ -16,7 +16,7 @@ def create_threads():
     threads = []
     
     # Rythm thread
-    rythm = threading.Thread(target=start_rythm, args=("Thread-Rythm",))
+    rythm = threading.Thread(target=start_rythm, args=())
     rythm.daemon = True
     threads.append(rythm)
     rythm.start()
