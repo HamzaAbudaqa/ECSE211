@@ -14,7 +14,6 @@ end_event = threading.Event()
 
 def start_drumming():
     while not end_event.is_set() :
-        print(stop_event.is_set())
         if not stop_event.is_set() :
             DRUM_MOTOR.set_limits(power=70)  # Limit power to avoid damage
             time.sleep(.5)
@@ -34,11 +33,9 @@ rythm = threading.Thread(target=start_drumming)
 
 def start_rythm():
     logging.info("Starting the Rythm.py")
-    subprocess.run(["python3", "Rythm.py"])
 
 def start_notes():
     logging.info("Starting the Notes.py")
-    subprocess.run(["python3", "Notes.py"])
 
 def emergency_stop():
     print("AAAAAAA")
