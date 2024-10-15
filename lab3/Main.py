@@ -1,7 +1,7 @@
 import threading, logging, subprocess
 from utils.brick import TouchSensor, wait_ready_sensors
 
-TOUCH_SENSOR = TouchSensor(1)
+TOUCH_SENSOR = TouchSensor(2)
 
 def start_rythm():
     logging.info("Starting the Rythm.py")
