@@ -27,7 +27,8 @@ if __name__ == "__main__":
         while True:
             if TOUCH_SENSOR.is_pressed():
                 emergency_stop()
-    except BaseException:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+    except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+        logging.exception(e)
         exit()
 
 
