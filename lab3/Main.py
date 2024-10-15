@@ -13,6 +13,7 @@ end_event = threading.Event()
 
 def start_drumming():
     while not end_event.is_set() :
+        print(stop_event.is_set())
         if not stop_event.is_set() :
             DRUM_MOTOR.set_limits(power=70)  # Limit power to avoid damage
             time.sleep(.5)
@@ -23,6 +24,7 @@ def start_drumming():
             time.sleep(DRUM_DELAY)
         else :
             time.sleep(0.05)
+            continue
     
 
 rythm = threading.Thread(target=start_drumming)
@@ -41,6 +43,7 @@ def emergency_stop():
     print("AAAAAAA")
     end_event.set()
     rythm.join()
+    
 
 
 if __name__ == "__main__":
@@ -49,10 +52,13 @@ if __name__ == "__main__":
         while True:
             if EMERG_SENSOR.is_pressed():
                 emergency_stop()
+                exit()
             if STARTSTOP.is_pressed() and stop_event.is_set():
                 stop_event.clear()
+                time.sleep(0.5)
             elif STARTSTOP.is_pressed() and not stop_event.is_set():
                 stop_event.set()
+                time.sleep(0.5)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         logging.exception(e)
         exit()
