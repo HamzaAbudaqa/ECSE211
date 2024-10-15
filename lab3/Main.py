@@ -1,6 +1,7 @@
 import threading, logging, subprocess
 from utils.brick import TouchSensor, wait_ready_sensors, Motor
 import time
+import os
 
 
 EMERG_SENSOR = TouchSensor(3)
@@ -52,7 +53,7 @@ if __name__ == "__main__":
         while True:
             if EMERG_SENSOR.is_pressed():
                 emergency_stop()
-                exit()
+                os._exit(0)
             if STARTSTOP.is_pressed() and stop_event.is_set():
                 stop_event.clear()
                 time.sleep(0.5)
@@ -61,7 +62,7 @@ if __name__ == "__main__":
                 time.sleep(0.5)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         logging.exception(e)
-        exit()
+        exit
 
 
 
