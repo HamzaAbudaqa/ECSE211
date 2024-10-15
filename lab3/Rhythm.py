@@ -7,7 +7,7 @@ from utils.brick import Motor, TouchSensor, reset_brick, wait_ready_sensors
 # Set up motor and button ports
 DRUM_MOTOR = Motor('A')  # Motor for the drumming mechanism
 BUTTON = TouchSensor(3)  # Button sensor for triggering drumming
-DRUM_DELAY = 1 #sec
+DRUM_DELAY = 0.15 #sec
 
 
 # Set the subsystem's initial state (idle)
@@ -15,22 +15,37 @@ DRUM_MOTOR.set_power(0)
 DRUM_MOTOR.reset_encoder()
 wait_ready_sensors(True)
 
+def stop():
+    DRUM_MOTOR.set_position(0) 
+    time.sleep(1)
+    DRUM_MOTOR.set_power(0)
+    print("Drum Stopped")
+    
+
+
+
 # Function to start the drumming mechanism
 def start_drumming():
-    DRUM_MOTOR.set_limits(power = 50)  # Limit power to avoid damage
+    DRUM_MOTOR.set_limits(power = 70)  # Limit power to avoid damage
+    time.sleep(.5)
     while True:
-        # Drumming rhythm logic
+        if BUTTON.is_pressed():
+            stop()
+            break
         DRUM_MOTOR.set_position(60) 
-        time.sleep(DRUM_DELAY)  # Add delay for rhythm
+        
+        time.sleep(DRUM_DELAY)  
+        if BUTTON.is_pressed():
+            stop()
+            break
+        
         DRUM_MOTOR.set_position(0) 
         time.sleep(DRUM_DELAY)
         
-        if BUTTON.is_pressed():  # Check if button is pressed again
-            DRUM_MOTOR.set_position(0) 
-            time.sleep(2)
-            DRUM_MOTOR.set_power(0)
-            print("Drum Stopped")
+        if BUTTON.is_pressed():
+            stop()
             break
+
 
 # Main loop
 try:
