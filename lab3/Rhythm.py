@@ -21,14 +21,14 @@ def start_drumming():
     while True:
         # Drumming rhythm logic
         DRUM_MOTOR.set_position(60) 
-        time.sleep(1)  # Add delay for rhythm
+        time.sleep(DRUM_DELAY)  # Add delay for rhythm
         DRUM_MOTOR.set_position(0) 
+        time.sleep(DRUM_DELAY)
         
         if BUTTON.is_pressed():  # Check if button is pressed again
             DRUM_MOTOR.set_position(0) 
-            time.sleep(DRUM_DELAY)
+            time.sleep(2)
             DRUM_MOTOR.set_power(0)
-            time.sleep(DRUM_DELAY)
             print("Drum Stopped")
             break
 
