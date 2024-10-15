@@ -7,6 +7,10 @@ def start_rythm():
     logging.info("Starting the Rythm.py")
     subprocess.run(["python3", "Rythm.py"])
 
+def start_notes():
+    logging.info("Starting the Notes.py")
+    subprocess.run(["python3", "Notes.py"])
+
 def emergency_stop():
     logging.info("Emergency stop triggered")
     exit()
@@ -20,6 +24,11 @@ def create_threads():
     rythm.daemon = True
     threads.append(rythm)
     rythm.start()
+
+    notes = threading.Thread(target=start_rythm, args=())
+    notes.daemon = True
+    threads.append(notes)
+    notes.start()
 
 if __name__ == "__main__":
     create_threads()
