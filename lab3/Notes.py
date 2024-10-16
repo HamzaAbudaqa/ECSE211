@@ -21,24 +21,19 @@ def playSound(US) :
     playNote(distance, 0.3)
     return
 
+def pickPitch(distance) :
+    if distance < 15 : return  523.25
+    elif distance < 22.5 : return 587.33
+    elif distance < 30 : return 659.26
+    elif distance < 37.5 : return 698.46
 
 def playNote(distance, duration) :
-    
     if distance < 7.5 :
-        sleep(duration)
-        return
-    elif distance < 15 :
-        sound.Sound(duration=duration, pitch = 523.25, volume=100).play()
-        print("playing 1")
-    elif distance < 22.5  :
-        sound.Sound(duration=duration, pitch = 587.33, volume=100).play()
-        print("playing 2")
-    elif distance < 30 :
-        sound.Sound(duration=duration, pitch = 659.26, volume=100).play()
-        print("playing 3")
-    elif distance < 37.5 :
-        sound.Sound(duration=duration, pitch = 698.46, volume=100).play()
-        print("playing 4")
+        sleep(duration/4)
+    elif distance > 37.5 :
+        sleep(duration/4)
+    else :
+        sound.Sound(duration, 100,pickPitch(distance)).play()
 
 
 
