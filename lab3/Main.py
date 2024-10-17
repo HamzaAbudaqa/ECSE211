@@ -1,5 +1,5 @@
 import threading, logging, subprocess
-from utils.brick import TouchSensor, wait_ready_sensors, Motor
+from utils.brick import TouchSensor, wait_ready_sensors, Motor,reset_brick
 import time
 import os
 
@@ -38,13 +38,14 @@ def start_notes():
     logging.info("Starting the Notes.py")
 
 def emergency_stop():
-    print("AAAAAAA")
     end_event.set()
     rythm.join()
+    reset_brick()
     
 
 
 if __name__ == "__main__":
+    wait_ready_sensors()
     rythm.start()
     try:
         while True:
