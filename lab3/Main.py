@@ -1,5 +1,8 @@
 import threading, logging, subprocess
 from utils.brick import TouchSensor, wait_ready_sensors, Motor,reset_brick
+from Notes import *
+from multiThreadingCapableRhythm import *
+
 import time
 import os
 
@@ -12,34 +15,29 @@ DRUM_DELAY = 0.15  # sec
 stop_event = threading.Event()
 end_event = threading.Event()
 
+def start_playing():
+   while not end_event.is_set():
+       playSound(1)
+
+    
+       
 def start_drumming():
     while not end_event.is_set() :
         if not stop_event.is_set() :
-            DRUM_MOTOR.set_limits(power=70)  # Limit power to avoid damage
-            time.sleep(.5)
-            DRUM_MOTOR.set_position(60)
-
-            time.sleep(DRUM_DELAY)
-            DRUM_MOTOR.set_position(0)
-            time.sleep(DRUM_DELAY)
+            drumRotate()
         else :
             time.sleep(0.05)
             continue
     
 
 rythm = threading.Thread(target=start_drumming)
+note = threading.Thread(target=start_playing)
 
-
-
-def start_rythm():
-    logging.info("Starting the Rythm.py")
-
-def start_notes():
-    logging.info("Starting the Notes.py")
 
 def emergency_stop():
     end_event.set()
     rythm.join()
+    note.join()
     reset_brick()
     
 
@@ -47,6 +45,7 @@ def emergency_stop():
 if __name__ == "__main__":
     wait_ready_sensors()
     rythm.start()
+    note.start()
     try:
         while True:
             if EMERG_SENSOR.is_pressed():

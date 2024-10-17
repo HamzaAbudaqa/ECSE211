@@ -2,6 +2,7 @@ from utils import sound
 from utils.brick import TouchSensor, EV3UltrasonicSensor, wait_ready_sensors, reset_brick, Motor
 from time import sleep
 from Notes import *
+from Rhythm import *
 import sys
 
 
