@@ -5,11 +5,12 @@ from multiThreadingCapableRhythm import *
 
 import time
 import os
+import sys
 
 
-EMERG_SENSOR = TouchSensor(3)
-STARTSTOP = TouchSensor (1)
-DRUM_MOTOR = Motor('B')  # Motor for the drumming mechanism# Button sensor for triggering drumming
+EMERG_SENSOR = TouchSensor(2)
+STARTSTOP = TouchSensor (3)
+DRUM_MOTOR = Motor('A')  # Motor for the drumming mechanism# Button sensor for triggering drumming
 DRUM_DELAY = 0.15  # sec
 
 stop_event = threading.Event()
@@ -44,22 +45,23 @@ def emergency_stop():
 
 if __name__ == "__main__":
     wait_ready_sensors()
+    stop_event.set()
     rythm.start()
     note.start()
     try:
         while True:
             if EMERG_SENSOR.is_pressed():
                 emergency_stop()
-                os._exit(0)
+                break
             if STARTSTOP.is_pressed() and stop_event.is_set():
                 stop_event.clear()
                 time.sleep(0.5)
             elif STARTSTOP.is_pressed() and not stop_event.is_set():
                 stop_event.set()
                 time.sleep(0.5)
-    except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+    except Exception as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         logging.exception(e)
-        exit
+        exit()
 
 
 

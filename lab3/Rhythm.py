@@ -26,13 +26,14 @@ def stop():
 
 # Function to start the drumming mechanism
 def start_drumming():
-    DRUM_MOTOR.set_limits(power = 70)  # Limit power to avoid damage
+    DRUM_MOTOR.set_limits(power = 100)  # Limit power to avoid damage
     time.sleep(.5)
     while True:
         if BUTTON.is_pressed():
             stop()
             break
-        DRUM_MOTOR.set_position(60) 
+        DRUM_MOTOR.set_position(75)
+        
         
         time.sleep(DRUM_DELAY)  
         if BUTTON.is_pressed():
