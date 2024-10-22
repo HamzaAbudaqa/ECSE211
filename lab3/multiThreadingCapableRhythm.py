@@ -18,8 +18,8 @@ def drumRotate() :
     """
     DRUM_MOTOR.set_limits(power=100)  # Limit power to avoid damage
     time.sleep(.5)
-    DRUM_MOTOR.set_position(75)
+    DRUM_MOTOR.set_position(30)
 
     time.sleep(DRUM_DELAY)
-    DRUM_MOTOR.set_position(0)
+    DRUM_MOTOR.set_position(-30)
     time.sleep(DRUM_DELAY)

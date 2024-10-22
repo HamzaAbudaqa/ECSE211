@@ -46,7 +46,7 @@ def pickPitch(distance) :
     if distance < 12 : return  523.25 #frequency of Do
     elif distance < 24 : return 587.33 #frequency of Ré
     elif distance < 36 : return 659.26 #frequency of Mi
-    elif distance < 48 : return 698.46 #frequency of Fa
+    elif distance <= 48 : return 698.46 #frequency of Fa
 
 def playNote(distance, duration) :
     """
@@ -59,10 +59,11 @@ def playNote(distance, duration) :
        """
     if distance < 4 :
         sleep(duration/4)
-    elif distance > 49 :
+    elif distance > 48 :
         sleep(duration/4)
     else :
         sound.Sound(duration, 100,pickPitch(distance)).play()
+        sleep(duration/8)
 
 if __name__ == "__main__":
     playSound(1)
