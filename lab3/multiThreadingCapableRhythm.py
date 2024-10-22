@@ -9,6 +9,13 @@ DRUM_DELAY = 0.15  # sec
 
 
 def drumRotate() :
+    """
+    Args :
+        none
+    Returns :
+        none
+    Calling this function once will cause the motor to hit the base once and return to position
+    """
     DRUM_MOTOR.set_limits(power=100)  # Limit power to avoid damage
     time.sleep(.5)
     DRUM_MOTOR.set_position(75)
