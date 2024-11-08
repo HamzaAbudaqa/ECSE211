@@ -17,13 +17,13 @@ SPEED_LIMIT = 720
 
 ROBOT_LEN = 15 # cm
 MAP_SIZE = 120 # cm
-NB_S = int (MAP_SIZE/ROBOT_LEN)/2
+NB_S = (int) (MAP_SIZE/ROBOT_LEN)/2
 FWD_SPEED = 100
 TRN_SPEED = 180
 
 
 def wait_for_motor(motor: Motor):
-    "Function to block until completion"
+    "Function to block until motor completion"
     while math.isclose(motor.get_speed(),0): # wait for motor to spin up
         time.sleep(MOTOR_POLL_DELAY)
     while not math.isclose(motor.get_speed(),0): # wait for motor to spin down
@@ -31,6 +31,7 @@ def wait_for_motor(motor: Motor):
 
 
 def init_motors():
+    "Initialize left and right motors"
     try:
         LEFT_MOTOR.reset_encoder()
         LEFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
@@ -56,6 +57,8 @@ def move_dist_fwd(distance, speed):
 
         
 def rotate(angle, speed):
+    # angle > 0: rotate right
+    # angle < 0: rotate left
     try:
         LEFT_MOTOR.set_dps(speed)
         RIGHT_MOTOR.set_dps(speed)
@@ -68,6 +71,8 @@ def rotate(angle, speed):
 
 
 def right_rotate_at_wall():
+    # right rotates at wall and positions itself in
+    # the next row to sweep
     try:
         rotate(90, TRN_SPEED)
         move_dist_fwd(ROBOT_LEN, FWD_SPEED)
@@ -77,6 +82,8 @@ def right_rotate_at_wall():
 
 
 def left_rotate_at_wall():
+    # left rotates at wall and positions itself in
+    # the next row to sweep
     try:
         rotate(-90, TRN_SPEED)
         move_dist_fwd(ROBOT_LEN, FWD_SPEED)
