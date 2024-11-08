@@ -42,7 +42,6 @@ def init_motors():
         print(error)
 
 
-
 def move_dist_fwd(distance, speed):
     try:
         LEFT_MOTOR.set_dps(speed)
@@ -96,14 +95,16 @@ def stop():
 try: 
     print("Navigation started")
     init_motors()
-    for i in range(NB_S): # check how many s' we're doing
+    for i in range(NB_S):
         move_dist_fwd(MAP_SIZE, FWD_SPEED)
         left_rotate_at_wall()
         move_dist_fwd(MAP_SIZE, FWD_SPEED)
         right_rotate_at_wall()
-    # get back to start
+    # get back to start position
     right_rotate_at_wall()
     move_dist_fwd(MAP_SIZE, FWD_SPEED)
+    print("Finished sweep of the map")
+    print("Navigation program ended")
 except KeyboardInterrupt:
     print("Navigation program terminated")
 finally:
