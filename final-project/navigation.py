@@ -92,6 +92,17 @@ def left_rotate_at_wall():
         print(error)
 
 
+def do_s_shape():
+    time.sleep(0.15)
+    move_dist_fwd(MAP_SIZE, FWD_SPEED)
+    time.sleep(0.15)
+    left_rotate_at_wall()
+    time.sleep(0.15)
+    move_dist_fwd(MAP_SIZE, FWD_SPEED)
+    time.sleep(0.15)
+    right_rotate_at_wall()
+
+
 def stop():
     time.sleep(1)
     RIGHT_MOTOR.set_power(0)
@@ -103,10 +114,7 @@ try:
     print("Navigation started")
     init_motors()
     for i in range(NB_S):
-        move_dist_fwd(MAP_SIZE, FWD_SPEED)
-        left_rotate_at_wall()
-        move_dist_fwd(MAP_SIZE, FWD_SPEED)
-        right_rotate_at_wall()
+        do_s_shape()
     # get back to start position
     right_rotate_at_wall()
     move_dist_fwd(MAP_SIZE, FWD_SPEED)
