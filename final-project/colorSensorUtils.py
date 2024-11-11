@@ -9,16 +9,17 @@ from utils.brick import TouchSensor, EV3UltrasonicSensor, wait_ready_sensors, re
 SensorPort = 1
 
 
-yellowCubeMapping = [0.56,0.38,0.055,"yellow"]
-orangeCubeMapping = [0.70,0.18,0.10,"orange"]
-greenCubeMapping = [0.17,0.63,0.20,"green"]
-blueCubeMapping = [0.18,0.35,0.47,"blue"]
-purpleCubeMapping = [0.38,0.26,0.36,"purple"]
-redCubeMapping = [0.91,0.11,0.08,"red"]
+yellowCube = [0.527,0.430,0.043,"yellowCube"]
+orangeCube = [0.704,0.197,0.099,"orangeCube"]
+greenCube = [0.136,0.690,0.081,"greenCube"]
+blueCube = [0.190,0.390,0.420,"blueCube"]
+purpleCube = [0.391,0.298,0.310,"purpleCube"]
+redCube = [0.803,0.130,0.066,"redCube"]
+greenFloor = [0.316,0.603,0.080,"greenFloor"]
+blueFloor = [0.205,0.315,0.480,"blueFloor"] 
 
 
-knownColors = [greenCubeMapping,blueCubeMapping,yellowCubeMapping,orangeCubeMapping,redCubeMapping,purpleCubeMapping]
-
+knownColors = [greenCube,blueCube,yellowCube,orangeCube, purpleCube,greenFloor,blueFloor]
 
 def getNormalizedRGBValues() :
     COLOR_SENSOR = EV3ColorSensor(SensorPort)
@@ -69,10 +70,9 @@ def average(values) :
     return sumOfValues/len(values)
 
 while(1):
-    FREQ=8
-    #time.sleep(1/FREQ)
-    r, g, b = getAveragedValues(5)
+
+    r, g, b = getAveragedValues(25)
     #print(r,g,b)
     print("\n")
-    if returnClosestValue(r,g,b) == "green" :
+    if returnClosestValue(r,g,b) == "greenCube" :
         print("GREEN DETECTED")
