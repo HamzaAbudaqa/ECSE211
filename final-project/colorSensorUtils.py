@@ -10,14 +10,14 @@ SensorPort = 1
 
 
 yellowCubeMapping = [0.56,0.38,0.055,"yellow"]
-orangeCubeMapping = [0.74,0.15,0.10,"orange"]
+orangeCubeMapping = [0.70,0.18,0.10,"orange"]
 greenCubeMapping = [0.17,0.63,0.20,"green"]
-blueCubeMapping = [0.20,0.33,0.47,"blue"]
-purpleCubeMapping = [0.38,0.26,0.33,"purple"]
+blueCubeMapping = [0.18,0.35,0.47,"blue"]
+purpleCubeMapping = [0.38,0.26,0.36,"purple"]
 redCubeMapping = [0.91,0.11,0.08,"red"]
 
 
-knownColors = [greenCubeMapping,blueCubeMapping,yellowCubeMapping,orangeCubeMapping,redCubeMapping]
+knownColors = [greenCubeMapping,blueCubeMapping,yellowCubeMapping,orangeCubeMapping,redCubeMapping,purpleCubeMapping]
 
 
 def getNormalizedRGBValues() :
@@ -71,5 +71,8 @@ def average(values) :
 while(1):
     FREQ=8
     #time.sleep(1/FREQ)
-    r, g, b = getAveragedValues(25)
-    print(returnClosestValue(r,g,b))
+    r, g, b = getAveragedValues(5)
+    #print(r,g,b)
+    print("\n")
+    if returnClosestValue(r,g,b) == "green" :
+        print("GREEN DETECTED")
