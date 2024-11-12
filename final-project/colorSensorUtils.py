@@ -6,7 +6,7 @@ import time
 
 from utils.brick import TouchSensor, EV3UltrasonicSensor, wait_ready_sensors, reset_brick, EV3ColorSensor
 
-SensorPort = 1
+
 
 
 yellowCube = [0.527,0.430,0.043,"yellowCube"]
@@ -19,23 +19,23 @@ greenFloor = [0.316,0.603,0.080,"greenFloor"]
 blueFloor = [0.205,0.315,0.480,"blueFloor"] 
 
 
-knownColors = [greenCube,blueCube,yellowCube,orangeCube, purpleCube,greenFloor,blueFloor]
+knownColors = [greenCube,purpleCube,yellowCube,orangeCube,greenFloor,blueFloor]
 
-def getNormalizedRGBValues() :
+def getNormalizedRGBValues(SensorPort) :
     COLOR_SENSOR = EV3ColorSensor(SensorPort)
     wait_ready_sensors()
     return normalize_rgb(COLOR_SENSOR.get_rgb()[0],COLOR_SENSOR.get_rgb()[1],COLOR_SENSOR.get_rgb()[2])
 
 
 
-def getAveragedValues(precision) :
+def getAveragedValues(precision,port) :
     redValues = []
     greenValues = []
     blueValues = []
 
     for i in range(precision) :
         
-        reading = getNormalizedRGBValues()
+        reading = getNormalizedRGBValues(port)
         #print(reading)
         redValues.append(reading[0])
         greenValues.append(reading[1])
@@ -71,7 +71,7 @@ def average(values) :
 
 while(1):
 
-    r, g, b = getAveragedValues(25)
+    r, g, b = getAveragedValues(25,1)
     #print(r,g,b)
     print("\n")
     if returnClosestValue(r,g,b) == "greenCube" :
