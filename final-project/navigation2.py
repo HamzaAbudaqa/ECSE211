@@ -5,7 +5,7 @@ MOTOR_POLL_DELAY = 0.2
 US_POLL_DELAY = 0.1
 
 RW = 0.022 # wheel radius
-RB = 0.04  # axle length
+RB = 0.065  # axle length
 
 DIST_TO_DEG = 180/(3.1416*RW)  # scale factor for distance
 ORIENT_TO_DEG = RB/RW          # scale factor for rotation
@@ -15,19 +15,19 @@ LEFT_MOTOR = Motor('B')
 POWER_LIMIT = 400
 SPEED_LIMIT = 720
 
-ROBOT_LEN = 0.15 # cm
+ROBOT_LEN = 0.15 # m
 MAP_SIZE = 120 # cm
 NB_S = int((MAP_SIZE/ROBOT_LEN)/2) # number of back and forth s motions to cover the entire board
 FWD_SPEED = 300
 TRN_SPEED = 320
 
 # bang bang controller constants
-DEADBAND = 10 # degrees
+DEADBAND = 8 # degrees
 DELTA_SPEED = 40 # dps
 
 # put value small enough so that if it's following the wall
 # the distance measured from the side won't have an impact
-MIN_DIST_FROM_WALL = 10 # cm
+MIN_DIST_FROM_WALL = 15 # cm
 
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
@@ -176,6 +176,19 @@ def do_s_shape():
     time.sleep(0.15)
     rotate_at_wall("right") # going to angle 0 on gyro
 
+def do_first_s_shape():
+    # going in initial dir
+    time.sleep(0.15)
+    move_fwd_until_wall(-10)
+    time.sleep(0.15)
+    rotate_at_wall("left") # going to angle -180 on gyro
+    # going in opposite dir
+    time.sleep(0.15)
+    move_fwd(ROBOT_LEN)
+    time.sleep(0.15)
+    move_fwd_until_wall(-180)
+    time.sleep(0.15)
+    rotate_at_wall("right") # going to angle 0 on gyro
 
 def get_back_to_start():
     """
@@ -201,7 +214,8 @@ def navigation_program():
     try: 
         print("Navigation program started")
         init_motors()
-        for i in range(NB_S):
+        do_first_s_shape()
+        for i in range(NB_S - 1):
             do_s_shape()
         # get back to start position
         get_back_to_start()
