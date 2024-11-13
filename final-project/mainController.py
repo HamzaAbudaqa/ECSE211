@@ -52,6 +52,7 @@ def move_fwd_until_wall(angle):
     The robot stops once it finds itself at a distance smaller than 3cm from
     a wall
     """
+    init_motors()
     try:
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
@@ -59,25 +60,20 @@ def move_fwd_until_wall(angle):
         while (US_SENSOR.get_value() > MIN_DIST_FROM_WALL):
             if (lakeDetectedLeft.is_set()):
                 print("lake detected left")
-                stop()
                 break
             if (lakeDetectedRight.is_set()):
                 print("lake detected right")
-                stop()
                 break
             if (obstacleDetectedLeft.is_set()):
                 print("object detected left")
-                stop()
             if (obstacleDetectedRight.is_set()):
                 print("object detected right")
-                stop()
+                break
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
-                stop()
                 break
             if (poopDetectedRight.is_set()):
                 print("poop detected right")
-                stop()
                 break
             
             if (i%5 != 0):# increase delay for bang bang controller
@@ -104,6 +100,17 @@ def move_fwd_until_wall(angle):
     except IOError as error:
         print(error)
 
+def init_motors():
+    "Initialize left and right motors"
+    try:
+        LEFT_MOTOR.reset_encoder()
+        LEFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        LEFT_MOTOR.set_power(0)
+        RIGHT_MOTOR.reset_encoder()
+        RIGHT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        RIGHT_MOTOR.set_power(0)
+    except IOError as error:
+        print(error)
     
 def stop():
     "Stop left and right motors"
@@ -135,12 +142,11 @@ def recognizeObstacles() :
         while True:
             rgbL = getAveragedValues(25,CS_L)
             rgbR = getAveragedValues(25,CS_R) #Get color data
-
+            
             colorDetectedLeft = returnClosestValue(rgbL[0],rgbL[1],rgbL[2])
             colorDetectedRight = returnClosestValue(rgbR[0],rgbR[1],rgbR[2]) #map color data to a known sample of colors
             
-            print(colorDetectedLeft)
-            
+            print(colorDetectedRight)
             if colorDetectedLeft in lakeColor:
                 lakeDetectedLeft.set() #set the flag for a lake being detected left, note that you will need to reset it once read
             elif colorDetectedLeft in cubesToAvoid:
@@ -172,10 +178,10 @@ def recognizeObstacles() :
         reset_brick()
 
 colorSensorThread = threading.Thread(target=recognizeObstacles)
-colorSensorThread.start()
-navigationThread = threading.Thread(target=move_fwd_until_wall, args=0,)
-navigationThread.start()
 
+navigationThread = threading.Thread(target=move_fwd_until_wall, args=[0])
+navigationThread.start()
+colorSensorThread.start()
 
 
 colorSensorThread.join()
