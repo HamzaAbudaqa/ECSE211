@@ -1,13 +1,11 @@
 import math
 import time
 
+from utils.brick import wait_ready_sensors, reset_brick, EV3ColorSensor
 
-
-
-from utils.brick import TouchSensor, EV3UltrasonicSensor, wait_ready_sensors, reset_brick, EV3ColorSensor
-
-
-
+CS_R = EV3ColorSensor(3)
+CS_L = EV3ColorSensor(4)
+wait_ready_sensors()
 
 yellowCube = [0.527,0.430,0.043,"yellowCube"]
 orangeCube = [0.704,0.197,0.099,"orangeCube"]
@@ -21,27 +19,37 @@ blueFloor = [0.205,0.315,0.480,"blueFloor"]
 
 knownColors = [greenCube,purpleCube,yellowCube,orangeCube,greenFloor,blueFloor]
 
-def getNormalizedRGBValues(SensorPort) :
-    COLOR_SENSOR = EV3ColorSensor(SensorPort)
-    wait_ready_sensors()
-    return normalize_rgb(COLOR_SENSOR.get_rgb()[0],COLOR_SENSOR.get_rgb()[1],COLOR_SENSOR.get_rgb()[2])
+def getNormalizedRGBValues(colorSensor) :
+    return normalize_rgb(colorSensor.get_rgb()[0],colorSensor.get_rgb()[1],colorSensor.get_rgb()[2])
 
 
-
-def getAveragedValues(precision,port) :
+def getAveragedValuesLeft(precision) :
     redValues = []
     greenValues = []
     blueValues = []
 
     for i in range(precision) :
-        
-        reading = getNormalizedRGBValues(port)
+        reading = getNormalizedRGBValues(CS_L)
         #print(reading)
         redValues.append(reading[0])
         greenValues.append(reading[1])
         blueValues.append(reading[2])
         #time.sleep(1/precision)
 
+    return average(redValues), average(greenValues), average(blueValues)
+
+def getAveragedValuesRight(precision) :
+    redValues = []
+    greenValues = []
+    blueValues = []
+
+    for i in range(precision) :
+        reading = getNormalizedRGBValues(CS_R)
+        #print(reading)
+        redValues.append(reading[0])
+        greenValues.append(reading[1])
+        blueValues.append(reading[2])
+        #time.sleep(1/precision)
 
     return average(redValues), average(greenValues), average(blueValues)
 
@@ -68,11 +76,3 @@ def average(values) :
     for val in values :
         sumOfValues += val
     return sumOfValues/len(values)
-
-while(1):
-
-    r, g, b = getAveragedValues(25,1)
-    #print(r,g,b)
-    print("\n")
-    if returnClosestValue(r,g,b) == "greenCube" :
-        print("GREEN DETECTED")
