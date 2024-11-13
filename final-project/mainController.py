@@ -44,7 +44,7 @@ wait_ready_sensors()
 
 def move_fwd_until_wall(angle):
     """
-    Makes the robot go in a staright line at the given angle (absolute angle
+    Makes the robot go in a straight line at the given angle (absolute angle
     rotated since start) by implementing the bang bang controller
 
     The robot stops once it finds itself at a distance smaller than 3cm from

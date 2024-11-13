@@ -59,11 +59,11 @@ def init_motors():
 
 def move_fwd_until_wall(angle):
     """
-    Makes the robot go in a staright line at the given angle (absolute angle
+    Makes the robot go in a straight line at the given angle (absolute angle
     rotated since start) by implementing the bang bang controller
 
-    The robot stops once it finds itself at a distance smaller than 3cm from
-    a wall
+    The robot stops once it finds itself at a distance smaller than 
+    MIN_DIST_FROM_WALL from a wall
     """
     try:
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
@@ -97,7 +97,7 @@ def move_fwd_until_wall(angle):
         
 def rotate(angle, speed):
     """
-    In-place rotation for the given angle
+    In-place rotation for the given (absolute) angle
     - angle > 0: rotate right
     - angle < 0: rotate left
     """
@@ -163,6 +163,9 @@ def move_fwd(distance):
         print(error)
 
 def do_s_shape():
+    """
+    Do an "S" back and forth shape from wall to wall
+    """
     # going in initial dir
     time.sleep(0.15)
     move_fwd_until_wall(0)
@@ -177,6 +180,11 @@ def do_s_shape():
     rotate_at_wall("right") # going to angle 0 on gyro
 
 def do_first_s_shape():
+    """
+    Do an "S" back and forth shape from wall to wall. Before it reaches the
+    first wall, this method moves the robot further away from the wall to 
+    account for its start position.
+    """
     # going in initial dir
     time.sleep(0.15)
     move_fwd_until_wall(-10) # move away from the wall
