@@ -171,7 +171,7 @@ def recognizeObstacles() :
 
 colorSensorThread = threading.Thread(target=recognizeObstacles)
 colorSensorThread.start()
-navigationThread = threading.Thread(target=move_fwd_until_wall, args=0)
+navigationThread = threading.Thread(target=move_fwd_until_wall, args=0,)
 navigationThread.start()
 
 

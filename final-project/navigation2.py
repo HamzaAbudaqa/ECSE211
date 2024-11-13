@@ -156,8 +156,8 @@ def move_fwd(distance):
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        LEFT_MOTOR.set_position_relative(int(ROBOT_LEN*DIST_TO_DEG))
-        RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN*DIST_TO_DEG))
+        LEFT_MOTOR.set_position_relative(int(distance*DIST_TO_DEG))
+        RIGHT_MOTOR.set_position_relative(int(distance*DIST_TO_DEG))
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print(error)
@@ -179,7 +179,7 @@ def do_s_shape():
 def do_first_s_shape():
     # going in initial dir
     time.sleep(0.15)
-    move_fwd_until_wall(-10)
+    move_fwd_until_wall(-10) # move away from the wall
     time.sleep(0.15)
     rotate_at_wall("left") # going to angle -180 on gyro
     # going in opposite dir
