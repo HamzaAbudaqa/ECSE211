@@ -36,6 +36,8 @@ MIN_DIST_FROM_WALL = 15 # cm
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
 US_SENSOR = EV3UltrasonicSensor(2)
+CS_L = EV3ColorSensor(3)
+CS_R = EV3ColorSensor(4)
 print("waiting for sensors")
 wait_ready_sensors()
 
@@ -111,9 +113,9 @@ def stop():
     time.sleep(0.15)
 
 
-lakeColor = [knownColors[5]]
-cubesToAvoid = [knownColors[0],knownColors[1]]
-poop = [knownColors[2],knownColors[3]]
+lakeColor = ["blueFloor"]
+cubesToAvoid = ["greenCube", "purpleCube"]
+poop = ["yellowCube","orangeCube"]
 
 lakeDetectedLeft = threading.Event()
 lakeDetectedRight = threading.Event()
@@ -131,8 +133,8 @@ def recognizeObstacles() :
     try:
         print("tryingToDectColor")
         while True:
-            rgbL = getAveragedValuesLeft(25)
-            rgbR = getAveragedValuesRight(25) #Get color data
+            rgbL = getAveragedValues(25,CS_L)
+            rgbR = getAveragedValues(25,CS_R) #Get color data
 
             colorDetectedLeft = returnClosestValue(rgbL[0],rgbL[1],rgbL[2])
             colorDetectedRight = returnClosestValue(rgbR[0],rgbR[1],rgbR[2]) #map color data to a known sample of colors

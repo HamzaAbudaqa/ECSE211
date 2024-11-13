@@ -3,9 +3,7 @@ import time
 
 from utils.brick import wait_ready_sensors, reset_brick, EV3ColorSensor
 
-CS_R = EV3ColorSensor(3)
-CS_L = EV3ColorSensor(4)
-wait_ready_sensors()
+
 
 yellowCube = [0.527,0.430,0.043,"yellowCube"]
 orangeCube = [0.704,0.197,0.099,"orangeCube"]
@@ -23,28 +21,13 @@ def getNormalizedRGBValues(colorSensor) :
     return normalize_rgb(colorSensor.get_rgb()[0],colorSensor.get_rgb()[1],colorSensor.get_rgb()[2])
 
 
-def getAveragedValuesLeft(precision) :
+def getAveragedValues(precision,CS) :
     redValues = []
     greenValues = []
     blueValues = []
 
     for i in range(precision) :
-        reading = getNormalizedRGBValues(CS_L)
-        #print(reading)
-        redValues.append(reading[0])
-        greenValues.append(reading[1])
-        blueValues.append(reading[2])
-        #time.sleep(1/precision)
-
-    return average(redValues), average(greenValues), average(blueValues)
-
-def getAveragedValuesRight(precision) :
-    redValues = []
-    greenValues = []
-    blueValues = []
-
-    for i in range(precision) :
-        reading = getNormalizedRGBValues(CS_R)
+        reading = getNormalizedRGBValues(CS)
         #print(reading)
         redValues.append(reading[0])
         greenValues.append(reading[1])
