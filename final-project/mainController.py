@@ -162,10 +162,6 @@ def recognizeObstacles():
             rgbL = getAveragedValues(50, CS_L)
             rgbR = getAveragedValues(50, CS_R)  # Get color data
 
-            if rgbL is None or rgbR is None:
-                print("none detected")
-                continue
-
             lastColorDetectedL = currentColorDetectedL
             lastColorDetectedR = currentColorDetectedR
 
