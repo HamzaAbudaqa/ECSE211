@@ -7,15 +7,17 @@ from utils.brick import wait_ready_sensors, reset_brick, EV3ColorSensor
 
 yellowCube = [0.527,0.430,0.043,"yellowCube"]
 orangeCube = [0.704,0.197,0.099,"orangeCube"]
-greenCube = [0.136,0.690,0.081,"greenCube"]
+
 blueCube = [0.190,0.390,0.420,"blueCube"]
 purpleCube = [0.391,0.298,0.310,"purpleCube"]
 redCube = [0.803,0.130,0.066,"redCube"]
 greenFloor = [0.316,0.603,0.080,"greenFloor"]
-blueFloor = [0.205,0.315,0.480,"blueFloor"] 
+greenCube = [0.136,0.690,0.081,"greenCube"]
+blueFloor = [0.205,0.315,0.480,"blueFloor"]
+redFloor = [0.76, 0.18,0.06,"redFloor"]
 
 
-knownColors = [greenCube,purpleCube,yellowCube,orangeCube,greenFloor,blueFloor]
+knownColors = [greenCube,purpleCube,yellowCube,greenFloor,blueFloor]
 
 def getNormalizedRGBValues(colorSensor) :
     return normalize_rgb(colorSensor.get_rgb()[0],colorSensor.get_rgb()[1],colorSensor.get_rgb()[2])
@@ -32,7 +34,7 @@ def getAveragedValues(precision,CS) :
         redValues.append(reading[0])
         greenValues.append(reading[1])
         blueValues.append(reading[2])
-        #time.sleep(1/precision)
+        time.sleep(0.05/precision)
 
     return average(redValues), average(greenValues), average(blueValues)
 
@@ -40,6 +42,9 @@ def getAveragedValues(precision,CS) :
 
 def normalize_rgb(r, g, b):
     #print("normalized")
+    if r is None or g is None or b is None :
+        print("None in color Sensor!")
+        return 0.313,0.603,0.080
     sum_rgb = r + g + b
     if sum_rgb == 0:
         return r, g, b
