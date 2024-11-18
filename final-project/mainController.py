@@ -1,11 +1,11 @@
 import threading
-from colorSensorUtils import *
+from colorSensorUtils import getAveragedValues, returnClosestValue
 
-from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors
+from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 import time, math
 
-MOTOR_POLL_DELAY = 0.2
-US_POLL_DELAY = 0.1
+MOTOR_POLL_DELAY = 0.1
+US_POLL_DELAY = 0.025
 
 RW = 0.022  # wheel radius
 RB = 0.065  # axle length
@@ -21,7 +21,7 @@ SPEED_LIMIT = 720
 ROBOT_LEN = 0.15  # m
 MAP_SIZE = 120  # cm
 NB_S = int((MAP_SIZE / ROBOT_LEN) / 2)  # number of back and forth s motions to cover the entire board
-FWD_SPEED = 300
+FWD_SPEED = 200
 TRN_SPEED = 320
 
 # bang bang controller constants
@@ -35,8 +35,8 @@ MIN_DIST_FROM_WALL = 15  # cm
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
 US_SENSOR = EV3UltrasonicSensor(2)
-CS_L = EV3ColorSensor(3)
-CS_R = EV3ColorSensor(4)
+CS_L = EV3ColorSensor(4)
+CS_R = EV3ColorSensor(3)
 print("waiting for sensors")
 wait_ready_sensors()
 
@@ -60,17 +60,23 @@ def move_fwd_until_wall(angle):
                 break
             if (lakeDetectedRight.is_set()):
                 print("lake detected right")
+                
                 break
             if (obstacleDetectedLeft.is_set()):
                 print("object detected left")
+               
+                break
             if (obstacleDetectedRight.is_set()):
                 print("object detected right")
+                
                 break
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
+                
                 break
             if (poopDetectedRight.is_set()):
                 print("poop detected right")
+                
                 break
 
             if (i % 5 != 0):  # increase delay for bang bang controller
@@ -95,8 +101,13 @@ def move_fwd_until_wall(angle):
                 RIGHT_MOTOR.set_dps(FWD_SPEED)
             time.sleep(US_POLL_DELAY)
         stop()
-    except IOError as error:
-        print(error)
+        time.sleep(5)
+        move_fwd_until_wall(0)
+    except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+        print(e)
+    finally :
+        exit()
+
 
 
 def init_motors():
@@ -110,7 +121,7 @@ def init_motors():
         RIGHT_MOTOR.set_power(0)
     except IOError as error:
         print(error)
-
+    
 
 def stop():
     "Stop left and right motors"
@@ -118,8 +129,15 @@ def stop():
     RIGHT_MOTOR.set_power(0)
     LEFT_MOTOR.set_power(0)
     time.sleep(0.15)
+    
+def start():
+    "Start left and right motors"
+    time.sleep(0.15)
+    RIGHT_MOTOR.set_dps(FWD_SPEED)
+    LEFT_MOTOR.set_dps(FWD_SPEED)
+    time.sleep(0.15)
 
-
+#COLOR CODE
 lakeColor = ["blueFloor"]
 cubesToAvoid = ["greenCube", "purpleCube"]
 poop = ["yellowCube", "orangeCube"]
@@ -138,7 +156,7 @@ runColorSensorThread.set()
 consecutiveYellowR = 0
 consecutiveYellowL = 0
 
-lineThreshold = 10
+lineThreshold = 4
 
 lastColorDetectedL = ""
 lastColorDetectedR = ""
@@ -159,36 +177,49 @@ def recognizeObstacles():
     try:
         print("tryingToDectColor")
         while True:
-            rgbL = getAveragedValues(50, CS_L)
-            rgbR = getAveragedValues(50, CS_R)  # Get color data
-
-            lastColorDetectedL = currentColorDetectedL
-            lastColorDetectedR = currentColorDetectedR
-
+            rgbL = getAveragedValues(10, CS_L)
+            rgbR = getAveragedValues(10, CS_R)  # Get color data
+            
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
-            colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],
-                                                    rgbR[2])  # map color data to a known sample of colors
+            colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],rgbR[2])  # map color data to a known sample of colors
 
-            currentColorDetectedL = colorDetectedLeft
-            currentColorDetectedR = colorDetectedRight
+            #print("Left: ")
+            #print(rgbL)
+            #print("Right: ")
+            #print(rgbR)
 
-            if poopDetectedLeftF():
+            if colorDetectedLeft in poop:
                 poopDetectedLeft.set()
+                lakeDetectedLeft.clear()
+                obstacleDetectedLeft.clear()
             elif colorDetectedLeft in lakeColor:
                 lakeDetectedLeft.set()  # set the flag for a lake being detected left, note that you will need to reset it once read
+                poopDetectedLeft.clear()
+                obstacleDetectedLeft.clear()
             elif colorDetectedLeft in cubesToAvoid:
+                print(rgbL)
                 obstacleDetectedLeft.set()
+                lakeDetectedLeft.clear()
+                poopDetectedLeft.clear()
+                print(currentColorDetectedL)
             elif colorDetectedLeft in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
                 poopDetectedLeft.clear()
 
-            if poopDetectedRightF():
+            if colorDetectedRight in poop:
                 poopDetectedRight.set()
+                obstacleDetectedRight.clear()
+                lakeDetectedRight.clear()
             elif colorDetectedRight in lakeColor:
                 lakeDetectedRight.set()
+                poopDetectedRight.clear()
+                obstacleDetectedRight.clear()
             elif colorDetectedRight in cubesToAvoid:
                 obstacleDetectedRight.set()
+                poopDetectedRight.clear()
+                lakeDetectedRight.clear()
+                print(currentColorDetectedR)
             elif colorDetectedRight in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
@@ -196,8 +227,8 @@ def recognizeObstacles():
 
             # sleep(0.25) in case a sleep is necessary to sync information between sensors
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
-        reset_brick()
         print(e)
+    finally :
         exit()
 
 
@@ -210,7 +241,6 @@ def poopDetectedLeftF():
     global currentColorDetectedL
     global currentColorDetectedR
     if not lastColorDetectedL == "yellowCube":
-        print(consecutiveYellowL)
         consecutiveYellowL = 0
         return False
     elif (consecutiveYellowL >= lineThreshold):
@@ -249,13 +279,32 @@ def poopDetectedRightF():
 
 
 colorSensorThread = threading.Thread(target=recognizeObstacles)
+navigationThread = threading.Thread(target=move_fwd_until_wall, args=[0], daemon=True)
+colorSensorThread.daemon = True
+navigationThread.daemon = True
+try:
+    navigationThread.start()
+    colorSensorThread.start()
+    colorSensorThread.join()
+    navigationThread.join()
+    
+except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+    print(e)
+finally :
+    reset_brick()
+    exit()
 
-navigationThread = threading.Thread(target=move_fwd_until_wall, args=[0])
-navigationThread.start()
-colorSensorThread.start()
 
-colorSensorThread.join()
-navigationThread.join()
+
+
+
+
+
+
+
+
+
+
 
 
 
