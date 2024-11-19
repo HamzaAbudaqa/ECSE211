@@ -170,8 +170,8 @@ def move_bwd(distance):
         RIGHT_MOTOR.set_dps(-FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        LEFT_MOTOR.set_position_relative(int(-distance*DIST_TO_DEG))
-        RIGHT_MOTOR.set_position_relative(int(-distance*DIST_TO_DEG))
+        LEFT_MOTOR.set_position_relative(int(-11*DIST_TO_DEG))
+        RIGHT_MOTOR.set_position_relative(int(-11*DIST_TO_DEG))
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print (error)
@@ -253,6 +253,6 @@ def navigation_program():
 def detect_and_grab():
     move_bwd()
     grab_and_release()
-    
+
 if __name__ == "__main__":
     navigation_program()
