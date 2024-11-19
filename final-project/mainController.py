@@ -1,5 +1,5 @@
 import threading
-from colorSensorUtils import getAveragedValues, returnClosestValue
+from colorSensorUtils import getAveragedValues, returnClosestValue, normalize_rgb, returnClosestNormalizedValue
 
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 import time, math
@@ -54,27 +54,26 @@ def move_fwd_until_wall(angle):
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         i = 0
-        while (US_SENSOR.get_value() > MIN_DIST_FROM_WALL):
-            if (lakeDetectedLeft.is_set()):
+        while US_SENSOR.get_value() > MIN_DIST_FROM_WALL:
+            if lakeDetectedLeft.is_set():
                 print("lake detected left")
                 break
-            if (lakeDetectedRight.is_set()):
+            if lakeDetectedRight.is_set():
                 print("lake detected right")
-                
                 break
-            if (obstacleDetectedLeft.is_set()):
+            if obstacleDetectedLeft.is_set():
                 print("object detected left")
                
                 break
-            if (obstacleDetectedRight.is_set()):
+            if obstacleDetectedRight.is_set():
                 print("object detected right")
                 
                 break
-            if (poopDetectedLeft.is_set()):
+            if poopDetectedLeft.is_set():
                 print("poop detected left")
                 
                 break
-            if (poopDetectedRight.is_set()):
+            if poopDetectedRight.is_set():
                 print("poop detected right")
                 
                 break
@@ -153,73 +152,53 @@ obstacleDetectedRight = threading.Event()
 runColorSensorThread = threading.Event()
 runColorSensorThread.set()
 
-consecutiveYellowR = 0
-consecutiveYellowL = 0
-
-lineThreshold = 4
-
-lastColorDetectedL = ""
-lastColorDetectedR = ""
-
-currentColorDetectedL = ""
-currentColorDetectedR = ""
-
 
 def recognizeObstacles():
-    global consecutiveYellowR
-    global consecutiveYellowL
-    global lineThreshold
-    global lastColorDetectedL
-    global lastColorDetectedR
-    global currentColorDetectedL
-    global currentColorDetectedR
     print("started color thread")
     try:
         print("tryingToDectColor")
         while True:
             rgbL = getAveragedValues(10, CS_L)
             rgbR = getAveragedValues(10, CS_R)  # Get color data
-            
+
+            normalizedLeft = normalize_rgb(rgbL[0], rgbL[1], rgbL[2])
+            normalizedRight = normalize_rgb(rgbL[0], rgbL[1], rgbL[2]) # Get normalized values
+
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
             colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],rgbR[2])  # map color data to a known sample of colors
 
-            #print("Left: ")
-            #print(rgbL)
-            #print("Right: ")
-            #print(rgbR)
+            normalizedColorDetectedLeft = returnClosestNormalizedValue(normalizedLeft[0], normalizedLeft[1], normalizedLeft[2])
+            normalizedColorDetectedRight = returnClosestNormalizedValue(normalizedRight[0], normalizedRight[1],normalizedRight[2])  # map color data to a known sample of colors
 
-            if colorDetectedLeft in poop:
+            if colorDetectedLeft in poop and normalizedColorDetectedLeft in poop:
                 poopDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
-            elif colorDetectedLeft in lakeColor:
+            elif colorDetectedLeft in lakeColor and normalizedColorDetectedLeft in lakeColor:
                 lakeDetectedLeft.set()  # set the flag for a lake being detected left, note that you will need to reset it once read
                 poopDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
-            elif colorDetectedLeft in cubesToAvoid:
-                print(rgbL)
+            elif colorDetectedLeft in cubesToAvoid and normalizedColorDetectedLeft in cubesToAvoid:
                 obstacleDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 poopDetectedLeft.clear()
-                print(currentColorDetectedL)
             elif colorDetectedLeft in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
                 poopDetectedLeft.clear()
 
-            if colorDetectedRight in poop:
+            if colorDetectedRight in poop and normalizedColorDetectedRight in poop:
                 poopDetectedRight.set()
                 obstacleDetectedRight.clear()
                 lakeDetectedRight.clear()
-            elif colorDetectedRight in lakeColor:
+            elif colorDetectedRight in lakeColor and normalizedColorDetectedRight in lakeColor:
                 lakeDetectedRight.set()
                 poopDetectedRight.clear()
                 obstacleDetectedRight.clear()
-            elif colorDetectedRight in cubesToAvoid:
+            elif colorDetectedRight in cubesToAvoid and normalizedColorDetectedRight in cubesToAvoid:
                 obstacleDetectedRight.set()
                 poopDetectedRight.clear()
                 lakeDetectedRight.clear()
-                print(currentColorDetectedR)
             elif colorDetectedRight in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
@@ -232,50 +211,7 @@ def recognizeObstacles():
         exit()
 
 
-def poopDetectedLeftF():
-    global consecutiveYellowR
-    global consecutiveYellowL
-    global lineThreshold
-    global lastColorDetectedL
-    global lastColorDetectedR
-    global currentColorDetectedL
-    global currentColorDetectedR
-    if not lastColorDetectedL == "yellowCube":
-        consecutiveYellowL = 0
-        return False
-    elif (consecutiveYellowL >= lineThreshold):
-        consecutiveYellowL = 0
-        return True
-    elif (currentColorDetectedL == "yellowCube" and currentColorDetectedL == lastColorDetectedL):
-        consecutiveYellowL += 1
-        return False
-    elif (consecutiveYellowL < lineThreshold and not currentColorDetectedL == "yellowCube"):
-        print("line detected")
-        consecutiveYellowL = 0
-        return False
 
-
-def poopDetectedRightF():
-    global consecutiveYellowR
-    global consecutiveYellowL
-    global lineThreshold
-    global lastColorDetectedL
-    global lastColorDetectedR
-    global currentColorDetectedL
-    global currentColorDetectedR
-    if not lastColorDetectedR == "yellowCube":
-        consecutiveYellowR = 0
-        return False
-    elif (consecutiveYellowR >= lineThreshold):
-        consecutiveYellowR = 0
-        return True
-    elif (currentColorDetectedR == "yellowCube" and currentColorDetectedR == lastColorDetectedR):
-        consecutiveYellowR += 1
-        return False
-    elif (consecutiveYellowR < lineThreshold and not currentColorDetectedR == "yellowCube"):
-        print("line detected")
-        consecutiveYellowR = 0
-        return False
 
 
 colorSensorThread = threading.Thread(target=recognizeObstacles)

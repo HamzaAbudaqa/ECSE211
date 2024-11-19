@@ -13,16 +13,16 @@ blueFloor = [1.558, 3.872, 4.856,"blueFloor"]
 redFloor = [8.984, 6.688, 2.47,"redFloor"]
 
 #NORMALIZED
-# yellowCube = [0.527,0.430,0.043,"yellowCube"]
-# orangeCube = [0.704,0.197,0.099,"orangeCube"]
-# 
-# blueCube = [0.190,0.390,0.420,"blueCube"]
-# purpleCube = [0.391,0.298,0.310,"purpleCube"]
-# redCube = [0.803,0.130,0.066,"redCube"]
-# greenFloor = [0.316,0.603,0.080,"greenFloor"]
-# greenCube = [0.136,0.690,0.081,"greenCube"]
-# blueFloor = [0.205,0.315,0.480,"blueFloor"]
-# redFloor = [0.76, 0.18,0.06,"redFloor"]
+yellowCube_N = [0.527,0.430,0.043,"yellowCube"]
+orangeCube_N = [0.704,0.197,0.099,"orangeCube"]
+
+blueCube_N = [0.190,0.390,0.420,"blueCube"]
+purpleCube_N = [0.391,0.298,0.310,"purpleCube"]
+redCube_N = [0.803,0.130,0.066,"redCube"]
+greenFloor_N = [0.316,0.603,0.080,"greenFloor"]
+greenCube_N = [0.136,0.690,0.081,"greenCube"]
+blueFloor_N = [0.205,0.315,0.480,"blueFloor"]
+redFloor_N = [0.76, 0.18,0.06,"redFloor"]
 
 consecutiveMin = 10
 consecutiveMax = 15
@@ -34,6 +34,7 @@ ignore = ["greenFloor", "redFloor"]
 
 
 knownColors = [greenCube,purpleCube,yellowCube,greenFloor,blueFloor,redFloor,orangeCube]
+knownColors_N = [greenCube_N,purpleCube_N,yellowCube_N,greenFloor_N,blueFloor_N,redFloor_N,orangeCube_N]
 
 def getNormalizedRGBValues(colorSensor) :
     return normalize_rgb(colorSensor.get_rgb()[0],colorSensor.get_rgb()[1],colorSensor.get_rgb()[2])
@@ -74,6 +75,16 @@ def returnClosestValue(r,g,b) :
         if distance < minColor[0] :
             minColor = [distance, knownColor[3]]
     return minColor[1]
+
+def returnClosestNormalizedValue(r,g,b) :
+    #print(r, g, b)
+    minColor = [10000,"default"]
+    for knownColor in knownColors_N :
+        distance = math.sqrt((r-knownColor[0])**2+(g-knownColor[1])**2+(b-knownColor[2])**2)
+        if distance < minColor[0] :
+            minColor = [distance, knownColor[3]]
+    return minColor[1]
+
 
 def average(values) :
     sumOfValues = 0
