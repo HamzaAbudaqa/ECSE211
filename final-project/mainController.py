@@ -3,6 +3,7 @@ from colorSensorUtils import getAveragedValues, returnClosestValue
 
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 import time, math
+from navigation2 import *
 
 MOTOR_POLL_DELAY = 0.1
 US_POLL_DELAY = 0.025
@@ -72,10 +73,12 @@ def move_fwd_until_wall(angle):
                 break
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
+                detect_and_grab()
                 
                 break
             if (poopDetectedRight.is_set()):
                 print("poop detected right")
+                detect_and_grab()
                 
                 break
 
@@ -211,6 +214,7 @@ def recognizeObstacles():
                 poopDetectedRight.set()
                 obstacleDetectedRight.clear()
                 lakeDetectedRight.clear()
+                detect_and_grab()
             elif colorDetectedRight in lakeColor:
                 lakeDetectedRight.set()
                 poopDetectedRight.clear()

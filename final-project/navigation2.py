@@ -1,5 +1,7 @@
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors
 import time, math
+from colorSensorUtils import *
+from grabber import *
 
 MOTOR_POLL_DELAY = 0.2
 US_POLL_DELAY = 0.1
@@ -162,6 +164,19 @@ def move_fwd(distance):
     except IOError as error:
         print(error)
 
+def move_bwd(distance):
+    try:
+        LEFT_MOTOR.set_dps(-FWD_SPEED)
+        RIGHT_MOTOR.set_dps(-FWD_SPEED)
+        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        LEFT_MOTOR.set_position_relative(int(-distance*DIST_TO_DEG))
+        RIGHT_MOTOR.set_position_relative(int(-distance*DIST_TO_DEG))
+        wait_for_motor(RIGHT_MOTOR)
+    except IOError as error:
+        print (error)
+
+
 def do_s_shape():
     """
     Do an "S" back and forth shape from wall to wall
@@ -235,6 +250,9 @@ def navigation_program():
         stop()
         reset_brick()
 
-
+def detect_and_grab():
+    move_bwd()
+    grab_and_release()
+    
 if __name__ == "__main__":
     navigation_program()

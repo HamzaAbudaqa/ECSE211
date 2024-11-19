@@ -12,6 +12,7 @@ greenCube = [13.886, 70.006, 18.134,"greenCube"]
 blueFloor = [1.558, 3.872, 4.856,"blueFloor"]
 redFloor = [8.984, 6.688, 2.47,"redFloor"]
 
+poopColor=[yellowCube, orangeCube]
 #NORMALIZED
 # yellowCube = [0.527,0.430,0.043,"yellowCube"]
 # orangeCube = [0.704,0.197,0.099,"orangeCube"]
