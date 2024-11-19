@@ -2,7 +2,7 @@ import threading
 from colorSensorUtils import getAveragedValues, returnClosestValue, normalize_rgb, returnClosestNormalizedValue
 
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
-import time, math
+import time
 
 MOTOR_POLL_DELAY = 0.1
 US_POLL_DELAY = 0.025
