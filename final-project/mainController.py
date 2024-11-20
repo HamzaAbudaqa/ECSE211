@@ -101,7 +101,6 @@ def move_fwd_until_wall(angle):
                 continue
             bang_bang_controller(angle, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
             i += 1
-
         stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)

@@ -100,6 +100,5 @@ def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
     grab_and_release()
 
-dump_storage()
-reset_brick()
+
 
