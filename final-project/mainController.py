@@ -161,26 +161,8 @@ obstacleDetectedRight = threading.Event()
 runColorSensorThread = threading.Event()
 runColorSensorThread.set()
 
-consecutiveYellowR = 0
-consecutiveYellowL = 0
-
-lineThreshold = 4
-
-lastColorDetectedL = ""
-lastColorDetectedR = ""
-
-currentColorDetectedL = ""
-currentColorDetectedR = ""
-
 
 def recognizeObstacles():
-    global consecutiveYellowR
-    global consecutiveYellowL
-    global lineThreshold
-    global lastColorDetectedL
-    global lastColorDetectedR
-    global currentColorDetectedL
-    global currentColorDetectedR
     print("started color thread")
     try:
         print("tryingToDectColor")
@@ -190,11 +172,6 @@ def recognizeObstacles():
             
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
             colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],rgbR[2])  # map color data to a known sample of colors
-
-            #print("Left: ")
-            #print(rgbL)
-            #print("Right: ")
-            #print(rgbR)
 
             if colorDetectedLeft in poop:
                 poopDetectedLeft.set()
@@ -209,7 +186,6 @@ def recognizeObstacles():
                 obstacleDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 poopDetectedLeft.clear()
-                print(currentColorDetectedL)
             elif colorDetectedLeft in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
@@ -228,7 +204,6 @@ def recognizeObstacles():
                 obstacleDetectedRight.set()
                 poopDetectedRight.clear()
                 lakeDetectedRight.clear()
-                print(currentColorDetectedR)
             elif colorDetectedRight in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
@@ -239,53 +214,6 @@ def recognizeObstacles():
         print(e)
     finally :
         exit()
-
-
-def poopDetectedLeftF():
-    global consecutiveYellowR
-    global consecutiveYellowL
-    global lineThreshold
-    global lastColorDetectedL
-    global lastColorDetectedR
-    global currentColorDetectedL
-    global currentColorDetectedR
-    if not lastColorDetectedL == "yellowCube":
-        consecutiveYellowL = 0
-        return False
-    elif (consecutiveYellowL >= lineThreshold):
-        consecutiveYellowL = 0
-        return True
-    elif (currentColorDetectedL == "yellowCube" and currentColorDetectedL == lastColorDetectedL):
-        consecutiveYellowL += 1
-        return False
-    elif (consecutiveYellowL < lineThreshold and not currentColorDetectedL == "yellowCube"):
-        print("line detected")
-        consecutiveYellowL = 0
-        return False
-
-
-def poopDetectedRightF():
-    global consecutiveYellowR
-    global consecutiveYellowL
-    global lineThreshold
-    global lastColorDetectedL
-    global lastColorDetectedR
-    global currentColorDetectedL
-    global currentColorDetectedR
-    if not lastColorDetectedR == "yellowCube":
-        consecutiveYellowR = 0
-        return False
-    elif (consecutiveYellowR >= lineThreshold):
-        consecutiveYellowR = 0
-        return True
-    elif (currentColorDetectedR == "yellowCube" and currentColorDetectedR == lastColorDetectedR):
-        consecutiveYellowR += 1
-        return False
-    elif (consecutiveYellowR < lineThreshold and not currentColorDetectedR == "yellowCube"):
-        print("line detected")
-        consecutiveYellowR = 0
-        return False
-
 
 
 if __name__ == "__main__":
