@@ -1,4 +1,4 @@
-from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors
+from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor
 import time, math
 from colorSensorUtils import *
 from grabber import *
@@ -12,8 +12,6 @@ RB = 0.065  # axle length
 DIST_TO_DEG = 180/(3.1416*RW)  # scale factor for distance
 ORIENT_TO_DEG = RB/RW          # scale factor for rotation
 
-RIGHT_MOTOR = Motor('A')
-LEFT_MOTOR = Motor('B')
 POWER_LIMIT = 400
 SPEED_LIMIT = 720
 
@@ -31,12 +29,6 @@ DELTA_SPEED = 40 # dps
 # the distance measured from the side won't have an impact
 MIN_DIST_FROM_WALL = 15 # cm
 
-# sensors
-GYRO = EV3GyroSensor(port=1, mode="abs")
-US_SENSOR = EV3UltrasonicSensor(2)
-print("waiting for sensors")
-wait_ready_sensors()
-
 
 def wait_for_motor(motor: Motor):
     "Function to block until motor completion"
@@ -46,7 +38,7 @@ def wait_for_motor(motor: Motor):
         time.sleep(MOTOR_POLL_DELAY)
 
 
-def init_motors():
+def init_motors(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     "Initialize left and right motors"
     try:
         LEFT_MOTOR.reset_encoder()
@@ -59,7 +51,7 @@ def init_motors():
         print(error)
 
 
-def move_fwd_until_wall(angle):
+def move_fwd_until_wall(angle, GYRO: EV3GyroSensor, US_SENSOR: EV3UltrasonicSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Makes the robot go in a straight line at the given angle (absolute angle
     rotated since start) by implementing the bang bang controller
@@ -92,22 +84,22 @@ def move_fwd_until_wall(angle):
                 LEFT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
                 RIGHT_MOTOR.set_dps(FWD_SPEED)
             time.sleep(US_POLL_DELAY)
-        stop()
+        stop(LEFT_MOTOR, RIGHT_MOTOR)
     except IOError as error:
         print(error)
 
         
-def rotate(angle, speed):
+def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     In-place rotation for the given (absolute) angle
     - angle > 0: rotate right
     - angle < 0: rotate left
     """
     try:
-        LEFT_MOTOR.set_dps(speed)
-        RIGHT_MOTOR.set_dps(speed)
-        LEFT_MOTOR.set_limits(POWER_LIMIT, speed)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, speed)
+        LEFT_MOTOR.set_dps(TRN_SPEED)
+        RIGHT_MOTOR.set_dps(TRN_SPEED)
+        LEFT_MOTOR.set_limits(POWER_LIMIT, TRN_SPEED)
+        RIGHT_MOTOR.set_limits(POWER_LIMIT, TRN_SPEED)
         LEFT_MOTOR.set_position_relative(int(angle * ORIENT_TO_DEG)) 
         RIGHT_MOTOR.set_position_relative(-int(angle * ORIENT_TO_DEG))
 
@@ -116,8 +108,7 @@ def rotate(angle, speed):
         print(error)
 
 
-
-def rotate_at_wall(dir: str):
+def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Rotates the robot in the given direction and positions itself in 
     the next row to sweep
@@ -128,10 +119,10 @@ def rotate_at_wall(dir: str):
         # go to -90 deg on gyro
         if (dir == "right"):
             print("rotating right")
-            rotate(-90 - GYRO.get_abs_measure(), TRN_SPEED)
+            rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
         else:
             print("rotating left 1")
-            rotate(-90 - GYRO.get_abs_measure() , TRN_SPEED)
+            rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
 
         # go straight for the length of the robot
         LEFT_MOTOR.set_dps(FWD_SPEED)
@@ -144,15 +135,15 @@ def rotate_at_wall(dir: str):
 
         if (dir == "right"): 
             # go to 0 deg on gyro
-            rotate( - GYRO.get_abs_measure(), TRN_SPEED)
+            rotate(- GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
         else:
             # go to -180 deg on gyro
             print("rotating left 2 ")
-            rotate(-180 - GYRO.get_abs_measure() , TRN_SPEED)
+            rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
     except IOError as error:
         print(error)
 
-def move_fwd(distance):
+def move_fwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     try:
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
@@ -164,37 +155,37 @@ def move_fwd(distance):
     except IOError as error:
         print(error)
 
-def move_bwd(distance):
+def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     try:
         LEFT_MOTOR.set_dps(-FWD_SPEED)
         RIGHT_MOTOR.set_dps(-FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        LEFT_MOTOR.set_position_relative(int(-11*DIST_TO_DEG))
-        RIGHT_MOTOR.set_position_relative(int(-11*DIST_TO_DEG))
+        LEFT_MOTOR.set_position_relative(int(-distance*DIST_TO_DEG))
+        RIGHT_MOTOR.set_position_relative(int(-distance*DIST_TO_DEG))
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print (error)
 
 
-def do_s_shape():
+def do_s_shape(GYRO: EV3GyroSensor, US_SENSOR: EV3UltrasonicSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Do an "S" back and forth shape from wall to wall
     """
     # going in initial dir
     time.sleep(0.15)
-    move_fwd_until_wall(0)
+    move_fwd_until_wall(0, GYRO, US_SENSOR, LEFT_MOTOR, RIGHT_MOTOR)
     time.sleep(0.15)
-    rotate_at_wall("left") # going to angle -180 on gyro
+    rotate_at_wall("left", LEFT_MOTOR, RIGHT_MOTOR) # going to angle -180 on gyro
     # going in opposite dir
     time.sleep(0.15)
-    move_fwd(ROBOT_LEN)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
     time.sleep(0.15)
-    move_fwd_until_wall(-180)
+    move_fwd_until_wall(-180, GYRO, US_SENSOR, LEFT_MOTOR, RIGHT_MOTOR)
     time.sleep(0.15)
-    rotate_at_wall("right") # going to angle 0 on gyro
+    rotate_at_wall("right", LEFT_MOTOR, RIGHT_MOTOR) # going to angle 0 on gyro
 
-def do_first_s_shape():
+def do_first_s_shape(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Do an "S" back and forth shape from wall to wall. Before it reaches the
     first wall, this method moves the robot further away from the wall to 
@@ -202,18 +193,18 @@ def do_first_s_shape():
     """
     # going in initial dir
     time.sleep(0.15)
-    move_fwd_until_wall(-10) # move away from the wall
+    move_fwd_until_wall(-10, LEFT_MOTOR, RIGHT_MOTOR) # move away from the wall
     time.sleep(0.15)
     rotate_at_wall("left") # going to angle -180 on gyro
     # going in opposite dir
     time.sleep(0.15)
-    move_fwd(ROBOT_LEN)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
     time.sleep(0.15)
-    move_fwd_until_wall(-180)
+    move_fwd_until_wall(-180, LEFT_MOTOR, RIGHT_MOTOR)
     time.sleep(0.15)
     rotate_at_wall("right") # going to angle 0 on gyro
 
-def get_back_to_start():
+def get_back_to_start(GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Gets the robot back to the start area given that the start area
     is in direction -270 deg (90 deg) abs angle on gyro
@@ -221,10 +212,10 @@ def get_back_to_start():
     # initially, robot is at wall
     time.sleep(0.15)
     rotate(-270 - GYRO.get_abs_measure(), TRN_SPEED) # turn in direction of start area
-    move_fwd_until_wall(90)
+    move_fwd_until_wall(90, LEFT_MOTOR, RIGHT_MOTOR)
     
 
-def stop():
+def stop(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     "Stop left and right motors"
     time.sleep(0.15)
     RIGHT_MOTOR.set_power(0)
@@ -232,27 +223,44 @@ def stop():
     time.sleep(0.15)
 
 
-def navigation_program():
-    "Make an entire sweep of the board and go back to start position"
-    try: 
-        print("Navigation program started")
-        init_motors()
-        do_first_s_shape()
-        for i in range(NB_S - 1):
-            do_s_shape()
-        # get back to start position
-        get_back_to_start()
-        print("Finished sweep of the map")
-        print("Navigation program ended")
-    except KeyboardInterrupt:
-        print("Navigation program terminated")
-    finally:
-        stop()
-        reset_brick()
+# def navigation_program():
+#     "Make an entire sweep of the board and go back to start position"
+#     try: 
+#         print("Navigation program started")
+#         init_motors()
+#         do_first_s_shape()
+#         for i in range(NB_S - 1):
+#             do_s_shape()
+#         # get back to start position
+#         get_back_to_start()
+#         print("Finished sweep of the map")
+#         print("Navigation program ended")
+#     except KeyboardInterrupt:
+#         print("Navigation program terminated")
+#     finally:
+#         stop()
+#         reset_brick()
 
-def detect_and_grab():
-    move_bwd()
+def bang_bang_controller(expected_angle: int, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    gyro_angle = GYRO.get_abs_measure()
+    if gyro_angle is None:
+        print("Gyro angle is none")
+        return
+    error = gyro_angle - expected_angle
+    if (abs(error) <= DEADBAND):  # no correction
+        LEFT_MOTOR.set_dps(FWD_SPEED)
+        RIGHT_MOTOR.set_dps(FWD_SPEED)
+    elif (error > 0):  # angle too big
+        # print("increasing right motor speed")
+        LEFT_MOTOR.set_dps(FWD_SPEED)
+        RIGHT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
+    else:  # angle too small
+        # print("increasing left motor speed")
+        LEFT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
+        RIGHT_MOTOR.set_dps(FWD_SPEED)
+    time.sleep(US_POLL_DELAY)
+
+
+def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
     grab_and_release()
-
-if __name__ == "__main__":
-    navigation_program()

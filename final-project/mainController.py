@@ -3,16 +3,10 @@ from colorSensorUtils import getAveragedValues, returnClosestValue
 
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 import time, math
-from navigation2 import *
+from navigation2 import init_motors, bang_bang_controller, rotate, stop, move_fwd, move_bwd
 
 MOTOR_POLL_DELAY = 0.1
 US_POLL_DELAY = 0.025
-
-RW = 0.022  # wheel radius
-RB = 0.065  # axle length
-
-DIST_TO_DEG = 180 / (3.1416 * RW)  # scale factor for distance
-ORIENT_TO_DEG = RB / RW  # scale factor for rotation
 
 RIGHT_MOTOR = Motor('A')
 LEFT_MOTOR = Motor('D')
@@ -20,8 +14,6 @@ POWER_LIMIT = 400
 SPEED_LIMIT = 720
 
 ROBOT_LEN = 0.15  # m
-MAP_SIZE = 120  # cm
-NB_S = int((MAP_SIZE / ROBOT_LEN) / 2)  # number of back and forth s motions to cover the entire board
 FWD_SPEED = 200
 TRN_SPEED = 320
 
@@ -38,11 +30,31 @@ GYRO = EV3GyroSensor(port=1, mode="abs")
 US_SENSOR = EV3UltrasonicSensor(2)
 CS_L = EV3ColorSensor(4)
 CS_R = EV3ColorSensor(3)
-print("waiting for sensors")
-wait_ready_sensors()
 
-init_motors()
+# claw
+CLAW_MOTOR = Motor('B')
+LIFT_MOTOR = Motor('C')
 
+
+def init_motors():
+    "Initialize all 4 motors"
+    try:
+        # wheel motors
+        LEFT_MOTOR.reset_encoder()
+        LEFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        LEFT_MOTOR.set_power(0)
+        RIGHT_MOTOR.reset_encoder()
+        RIGHT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        RIGHT_MOTOR.set_power(0)
+        # claw motors
+        CLAW_MOTOR.reset_encoder()
+        CLAW_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        CLAW_MOTOR.set_power(0)
+        LIFT_MOTOR.reset_encoder()
+        LIFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        LIFT_MOTOR.set_power(0)
+    except IOError as error:
+        print(error)
 
 def move_fwd_until_wall(angle):
     """
@@ -64,17 +76,17 @@ def move_fwd_until_wall(angle):
                 print("lake detected right")
                 break
             if (obstacleDetectedLeft.is_set()):
-                stop()
+                stop(LEFT_MOTOR, RIGHT_MOTOR)
                 time.sleep(0.4)
                 if (obstacleDetectedLeft.is_set()):
                     print("object detected left")
-                    break
+                    avoid_obstacle("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
             if (obstacleDetectedRight.is_set()):
-                stop()
+                stop(LEFT_MOTOR, RIGHT_MOTOR)
                 time.sleep(0.4)
                 if (obstacleDetectedRight.is_set()):
                     print("object detected right")
-                    break
+                    avoid_obstacle("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
                 detect_and_grab()
@@ -84,56 +96,46 @@ def move_fwd_until_wall(angle):
                 detect_and_grab()
                 break
 
-            if (i % 5 != 0):  # increase delay for bang bang controller
+            if (i % 5 != 0):  # increase delay for bang bang controller corrections
                 time.sleep(0.2)
                 continue
-            # bang bang controller
-            gyro_angle = GYRO.get_abs_measure()
-            if gyro_angle is None:
-                print("Gyro angle is none")
-                continue
-            error = gyro_angle - angle
-            if (abs(error) <= DEADBAND):  # no correction
-                LEFT_MOTOR.set_dps(FWD_SPEED)
-                RIGHT_MOTOR.set_dps(FWD_SPEED)
-            elif (error > 0):  # angle too big
-                # print("increasing right motor speed")
-                LEFT_MOTOR.set_dps(FWD_SPEED)
-                RIGHT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
-            else:  # angle too small
-                # print("increasing left motor speed")
-                LEFT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
-                RIGHT_MOTOR.set_dps(FWD_SPEED)
-            time.sleep(US_POLL_DELAY)
-        stop()
-        time.sleep(5)
-        move_fwd_until_wall(0)
+            bang_bang_controller(angle, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+            i += 1
+
+        stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
     finally :
         exit()
 
 
+def avoid_obstacle(direction: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
+    angle = GYRO.get_abs_measure()
+    turn_until_no_obstacle(direction)
+    move_fwd(11, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(GYRO.get_abs_measure()-angle, LEFT_MOTOR, RIGHT_MOTOR)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    if (direction == "left"):
+        rotate(90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR) # rotate right to go back
+        move_fwd(10, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(-90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+    else:
+        rotate(-90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR) # rotate left to go back
+        move_fwd(10, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
 
-def init_motors():
-    "Initialize left and right motors"
-    try:
-        LEFT_MOTOR.reset_encoder()
-        LEFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        LEFT_MOTOR.set_power(0)
-        RIGHT_MOTOR.reset_encoder()
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        RIGHT_MOTOR.set_power(0)
-    except IOError as error:
-        print(error)
     
+def turn_until_no_obstacle(direction: str):
+    if (direction == "left"):
+        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
+            rotate(-5, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+    else: # turn in + angle
+        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
+            rotate(+5, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+    stop(LEFT_MOTOR, RIGHT_MOTOR)
 
-def stop():
-    "Stop left and right motors"
-    time.sleep(0.15)
-    RIGHT_MOTOR.set_power(0)
-    LEFT_MOTOR.set_power(0)
-    time.sleep(0.15)
+
     
 def start():
     "Start left and right motors"
@@ -141,6 +143,10 @@ def start():
     RIGHT_MOTOR.set_dps(FWD_SPEED)
     LEFT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(0.15)
+
+def detect_and_grab():
+    move_bwd()
+    grab_and_release()
 
 #COLOR CODE
 lakeColor = ["blueFloor"]
@@ -284,21 +290,26 @@ def poopDetectedRightF():
         return False
 
 
-colorSensorThread = threading.Thread(target=recognizeObstacles)
-navigationThread = threading.Thread(target=move_fwd_until_wall, args=[0], daemon=True)
-colorSensorThread.daemon = True
-navigationThread.daemon = True
-try:
-    navigationThread.start()
-    colorSensorThread.start()
-    colorSensorThread.join()
-    navigationThread.join()
-    
-except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
-    print(e)
-finally :
-    reset_brick()
-    exit()
+
+if __name__ == "__main__":
+    wait_ready_sensors()
+    init_motors()
+
+    colorSensorThread = threading.Thread(target=recognizeObstacles)
+    navigationThread = threading.Thread(target=move_fwd_until_wall, args=[0], daemon=True)
+    colorSensorThread.daemon = True
+    navigationThread.daemon = True
+    try:
+        navigationThread.start()
+        colorSensorThread.start()
+        colorSensorThread.join()
+        navigationThread.join()
+        
+    except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+        print(e)
+    finally :
+        reset_brick()
+        exit()
 
 
 
