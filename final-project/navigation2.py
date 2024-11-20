@@ -260,7 +260,3 @@ def bang_bang_controller(expected_angle: int, GYRO: EV3GyroSensor, LEFT_MOTOR: M
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(US_POLL_DELAY)
 
-
-def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
-    grab_and_release()

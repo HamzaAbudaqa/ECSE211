@@ -1,12 +1,12 @@
 
 from utils.brick import Motor, configure_ports, reset_brick
 from time import sleep
-
+from navigation2 import *
 
 CLAW_MOTOR = Motor('B')
 LIFT_MOTOR = Motor('C')
 GRAB_POSITION = 300
-HIT_POSITION = 250
+HIT_POSITION = 20
 LIFT_UP_POSITION = -240
 HITTING_POSITION = -210
 LIFT_HALF_UP_POSITION = -50
@@ -57,6 +57,7 @@ def grab_and_release():
     except IOError as error:
         print(f"Error: {error}")
 
+
 def dump_storage():
     ''' function to dump blocks inside storage unit into the trash'''
     try:
@@ -95,6 +96,9 @@ def dump_storage():
         print (f"Error during dumping operation: {error}")
 
 
+def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
+    grab_and_release()
 
 dump_storage()
 reset_brick()

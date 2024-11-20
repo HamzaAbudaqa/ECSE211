@@ -1,6 +1,6 @@
 import threading
 from colorSensorUtils import getAveragedValues, returnClosestValue
-
+from grabber import *
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 import time, math
 from navigation2 import init_motors, bang_bang_controller, rotate, stop, move_fwd, move_bwd
@@ -89,11 +89,11 @@ def move_fwd_until_wall(angle):
                     avoid_obstacle("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
-                detect_and_grab()
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
                 break
             if (poopDetectedRight.is_set()):
                 print("poop detected right")
-                detect_and_grab()
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
                 break
 
             if (i % 5 != 0):  # increase delay for bang bang controller corrections
@@ -144,9 +144,7 @@ def start():
     LEFT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(0.15)
 
-def detect_and_grab():
-    move_bwd()
-    grab_and_release()
+
 
 #COLOR CODE
 lakeColor = ["blueFloor"]
