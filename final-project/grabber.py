@@ -1,10 +1,8 @@
 
-from utils.brick import Motor, configure_ports, reset_brick
+from utils.brick import Motor
 from time import sleep
-from navigation2 import *
+from navigation2 import move_bwd
 
-CLAW_MOTOR = Motor('B')
-LIFT_MOTOR = Motor('C')
 GRAB_POSITION = 300
 HIT_POSITION = 20
 LIFT_UP_POSITION = -240
@@ -21,7 +19,7 @@ LIFT_POWER_LIMIT = 70
 LIFT_SPEED_LIMIT = 200
 DUMP_WAIT_TIME = 3
 
-def grab_and_release():
+def grab_and_release(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     ''' Function to grab a block lift it & release it into storage unit '''
     
     try:
@@ -58,7 +56,7 @@ def grab_and_release():
         print(f"Error: {error}")
 
 
-def dump_storage():
+def dump_storage(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     ''' function to dump blocks inside storage unit into the trash'''
     try:
 
@@ -96,9 +94,9 @@ def dump_storage():
         print (f"Error during dumping operation: {error}")
 
 
-def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
-    grab_and_release()
+    grab_and_release(CLAW_MOTOR, LIFT_MOTOR)
 
 
 

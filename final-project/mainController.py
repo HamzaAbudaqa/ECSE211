@@ -137,7 +137,7 @@ def turn_until_no_obstacle(direction: str):
 
     
 def start():
-    "Start left and right motors"
+    "Start left and right wheel motors"
     time.sleep(0.15)
     RIGHT_MOTOR.set_dps(FWD_SPEED)
     LEFT_MOTOR.set_dps(FWD_SPEED)
