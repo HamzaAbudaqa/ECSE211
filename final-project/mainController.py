@@ -41,6 +41,8 @@ CS_R = EV3ColorSensor(3)
 print("waiting for sensors")
 wait_ready_sensors()
 
+init_motors()
+
 
 def move_fwd_until_wall(angle):
     """
@@ -50,7 +52,6 @@ def move_fwd_until_wall(angle):
     The robot stops once it finds itself at a distance smaller than 3cm from
     a wall
     """
-    init_motors()
     try:
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
@@ -61,25 +62,26 @@ def move_fwd_until_wall(angle):
                 break
             if (lakeDetectedRight.is_set()):
                 print("lake detected right")
-                
                 break
             if (obstacleDetectedLeft.is_set()):
-                print("object detected left")
-               
-                break
+                stop()
+                time.sleep(0.4)
+                if (obstacleDetectedLeft.is_set()):
+                    print("object detected left")
+                    break
             if (obstacleDetectedRight.is_set()):
-                print("object detected right")
-                
-                break
+                stop()
+                time.sleep(0.4)
+                if (obstacleDetectedRight.is_set()):
+                    print("object detected right")
+                    break
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
                 detect_and_grab()
-                
                 break
             if (poopDetectedRight.is_set()):
                 print("poop detected right")
                 detect_and_grab()
-                
                 break
 
             if (i % 5 != 0):  # increase delay for bang bang controller

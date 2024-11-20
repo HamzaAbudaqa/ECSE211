@@ -3,8 +3,8 @@ from utils.brick import Motor, configure_ports, reset_brick
 from time import sleep
 
 
-CLAW_MOTOR = Motor('A')
-LIFT_MOTOR = Motor('B')
+CLAW_MOTOR = Motor('B')
+LIFT_MOTOR = Motor('C')
 GRAB_POSITION = 300
 HIT_POSITION = 250
 LIFT_UP_POSITION = -240
