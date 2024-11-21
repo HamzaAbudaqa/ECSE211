@@ -122,7 +122,6 @@ def recognizeObstacles():
                 poopDetectedRight.set()
                 obstacleDetectedRight.clear()
                 lakeDetectedRight.clear()
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
             elif colorDetectedRight in lakeColor:
                 lakeDetectedRight.set()
                 poopDetectedRight.clear()
@@ -203,10 +202,10 @@ def move_fwd_until_wall(angle, dist):
                     avoid_obstacle("right", LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LEFT_MOTOR)
             if (poopDetectedRight.is_set()):
                 print("poop detected right")
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LEFT_MOTOR)
 
             if (i != 0):  # increase the delay for bang bang controller corrections
                 time.sleep(0.2)
