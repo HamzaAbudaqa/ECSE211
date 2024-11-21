@@ -1,29 +1,9 @@
-import threading
+import threading, time
 from colorSensorUtils import getAveragedValues, returnClosestValue
 from grabber import *
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
-import time, math
-from navigation2 import init_motors, bang_bang_controller, rotate, stop, move_fwd, move_bwd
+from navigation2 import *
 
-MOTOR_POLL_DELAY = 0.1
-US_POLL_DELAY = 0.025
-
-RIGHT_MOTOR = Motor('A')
-LEFT_MOTOR = Motor('D')
-POWER_LIMIT = 400
-SPEED_LIMIT = 720
-
-ROBOT_LEN = 0.15  # m
-FWD_SPEED = 200
-TRN_SPEED = 320
-
-# bang bang controller constants
-DEADBAND = 8  # degrees
-DELTA_SPEED = 40  # dps
-
-# put value small enough so that if it's following the wall
-# the distance measured from the side won't have an impact
-MIN_DIST_FROM_WALL = 15  # cm
 
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
@@ -31,7 +11,10 @@ US_SENSOR = EV3UltrasonicSensor(2)
 CS_L = EV3ColorSensor(4)
 CS_R = EV3ColorSensor(3)
 
-# claw
+# wheel motors
+RIGHT_MOTOR = Motor('A')
+LEFT_MOTOR = Motor('D')
+# claw motors
 CLAW_MOTOR = Motor('B')
 LIFT_MOTOR = Motor('C')
 
@@ -57,85 +40,19 @@ def init_motors():
         print(error)
 
 
-def move_fwd_until_wall(angle):
-    """
-    Makes the robot go in a straight line at the given angle (absolute angle
-    rotated since start) by implementing the bang bang controller
-
-    The robot stops once it finds itself at a distance smaller than 3cm from
-    a wall
-    """
+def navigation_program():
+    "Do an entire sweep of the board"
     try:
-        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        i = 0
-        while (US_SENSOR.get_value() > MIN_DIST_FROM_WALL):
-            if (lakeDetectedLeft.is_set()):
-                print("lake detected left")
-                break
-            if (lakeDetectedRight.is_set()):
-                print("lake detected right")
-                break
-            if (obstacleDetectedLeft.is_set()):
-                print("object detected left")
-                avoid_obstacle("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            if (obstacleDetectedRight.is_set()):
-                print("object detected right")
-                avoid_obstacle("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            if (poopDetectedLeft.is_set()):
-                print("poop detected left")
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
-                break
-            if (poopDetectedRight.is_set()):
-                print("poop detected right")
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
-                break
-
-            if (i % 5 != 0):  # increase delay for bang bang controller corrections
-                time.sleep(0.2)
-                continue
-            bang_bang_controller(angle, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            i += 1
-        stop(LEFT_MOTOR, RIGHT_MOTOR)
-    except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
-        print(e)
+        print("Starting board sweeping started")
+        do_first_s_shape(GYRO, US_SENSOR, LEFT_MOTOR, RIGHT_MOTOR)
+        for i in range(NB_S - 1):
+            do_s_shape()
+    except KeyboardInterrupt:
+        print("Navigation program terminated")
     finally:
-        exit()
+        stop()
+        reset_brick()
 
-
-def avoid_obstacle(direction: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
-    angle = GYRO.get_abs_measure()
-    turn_until_no_obstacle(direction)
-    move_fwd(11, LEFT_MOTOR, RIGHT_MOTOR)
-    rotate(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
-    if (direction == "left"):
-        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)  # right to go back
-        move_fwd(10, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
-    else:
-        rotate(-90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)  # rotate left to go back
-        move_fwd(10, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
-
-
-def turn_until_no_obstacle(direction: str):
-    if (direction == "left"):
-        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
-            rotate(-5, LEFT_MOTOR, RIGHT_MOTOR)
-    else:  # turn in + angle
-        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
-            rotate(+5, LEFT_MOTOR, RIGHT_MOTOR)
-    stop(LEFT_MOTOR, RIGHT_MOTOR)
-
-
-def start():
-    "Start left and right motors"
-    time.sleep(0.15)
-    RIGHT_MOTOR.set_dps(FWD_SPEED)
-    LEFT_MOTOR.set_dps(FWD_SPEED)
-    time.sleep(0.15)
 
 
 # COLOR CODE
@@ -234,7 +151,7 @@ if __name__ == "__main__":
     init_motors()
 
     colorSensorThread = threading.Thread(target=recognizeObstacles)
-    navigationThread = threading.Thread(target=move_fwd_until_wall, args=[0], daemon=True)
+    navigationThread = threading.Thread(target=navigation_program, args=[0], daemon=True)
     colorSensorThread.daemon = True
     navigationThread.daemon = True
     try:
@@ -255,29 +172,101 @@ if __name__ == "__main__":
 
 
 
+# HELPER METHODS FOR NAVIGATION THAT CAN'T BE PUT IN navigation2.py
+# BECAUSE THEY NEED ACCESS TO THREAD EVENTS
 
 
+def move_fwd_until_wall(angle):
+    """
+    Makes the robot go in a straight line at the given angle (absolute angle
+    rotated since start) by implementing the bang bang controller
+
+    The robot stops once it finds itself at a distance smaller than 3cm from
+    a wall
+    """
+    try:
+        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        i = 0
+        while (US_SENSOR.get_value() > MIN_DIST_FROM_WALL):
+            if (lakeDetectedLeft.is_set()):
+                print("lake detected left")
+                break
+            if (lakeDetectedRight.is_set()):
+                print("lake detected right")
+                break
+            if (obstacleDetectedLeft.is_set()):
+                print("object detected left")
+                if (US_SENSOR.get_value() < 15): # not enough space to go around
+                    break
+                else:
+                    avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
+            if (obstacleDetectedRight.is_set()):
+                print("object detected right")
+                if (US_SENSOR.get_value() < 15): # not enough space to go around
+                    break
+                else:
+                    avoid_obstacle("right", LEFT_MOTOR, RIGHT_MOTOR)
+            if (poopDetectedLeft.is_set()):
+                print("poop detected left")
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
+            if (poopDetectedRight.is_set()):
+                print("poop detected right")
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
+
+            if (i % 5 != 0):  # increase delay for bang bang controller corrections
+                time.sleep(0.2)
+                continue
+            bang_bang_controller(angle, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+            i += 1
+        stop(LEFT_MOTOR, RIGHT_MOTOR)
+    except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
+        print(e)
+    finally:
+        exit()
+
+def do_s_shape():
+    """
+    Do an "S" back and forth shape from wall to wall
+    """
+    # going in initial dir
+    time.sleep(0.15)
+    move_fwd_until_wall(0)
+    time.sleep(0.15)
+    rotate_at_wall("left", LEFT_MOTOR, RIGHT_MOTOR)  # going to angle -180 on gyro
+    # going in opposite dir
+    time.sleep(0.15)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    time.sleep(0.15)
+    move_fwd_until_wall(-180)
+    time.sleep(0.15)
+    rotate_at_wall("right", LEFT_MOTOR, RIGHT_MOTOR)  # going to angle 0 on gyro
+
+def do_first_s_shape():
+    """
+    Do an "S" back and forth shape from wall to wall. Before it reaches the
+    first wall, this method moves the robot further away from the wall to
+    account for its start position.
+    """
+    # going in initial dir
+    time.sleep(0.15)
+    move_fwd_until_wall(-10)  # move away from the wall
+    time.sleep(0.15)
+    rotate_at_wall("left")  # going to angle -180 on gyro
+    # going in opposite dir
+    time.sleep(0.15)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    time.sleep(0.15)
+    move_fwd_until_wall(-180)
+    time.sleep(0.15)
+    rotate_at_wall("right")  # going to angle 0 on gyro
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def turn_until_no_obstacle(direction: str):
+    if (direction == "left"):
+        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
+            rotate(-5, LEFT_MOTOR, RIGHT_MOTOR)
+    else:  # turn in + angle
+        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
+            rotate(+5, LEFT_MOTOR, RIGHT_MOTOR)
+    stop(LEFT_MOTOR, RIGHT_MOTOR)
