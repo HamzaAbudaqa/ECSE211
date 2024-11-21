@@ -56,6 +56,7 @@ def init_motors():
     except IOError as error:
         print(error)
 
+
 def move_fwd_until_wall(angle):
     """
     Makes the robot go in a straight line at the given angle (absolute angle
@@ -76,17 +77,11 @@ def move_fwd_until_wall(angle):
                 print("lake detected right")
                 break
             if (obstacleDetectedLeft.is_set()):
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
-                time.sleep(0.4)
-                if (obstacleDetectedLeft.is_set()):
-                    print("object detected left")
-                    avoid_obstacle("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+                print("object detected left")
+                avoid_obstacle("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
             if (obstacleDetectedRight.is_set()):
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
-                time.sleep(0.4)
-                if (obstacleDetectedRight.is_set()):
-                    print("object detected right")
-                    avoid_obstacle("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+                print("object detected right")
+                avoid_obstacle("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
                 print("poop detected left")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
@@ -104,7 +99,7 @@ def move_fwd_until_wall(angle):
         stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
-    finally :
+    finally:
         exit()
 
 
@@ -113,39 +108,37 @@ def avoid_obstacle(direction: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT
     angle = GYRO.get_abs_measure()
     turn_until_no_obstacle(direction)
     move_fwd(11, LEFT_MOTOR, RIGHT_MOTOR)
-    rotate(GYRO.get_abs_measure()-angle, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
     move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
     if (direction == "left"):
-        rotate(90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR) # rotate right to go back
+        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)  # right to go back
         move_fwd(10, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(-90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
     else:
-        rotate(-90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR) # rotate left to go back
+        rotate(-90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)  # rotate left to go back
         move_fwd(10, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(90, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
 
-    
+
 def turn_until_no_obstacle(direction: str):
     if (direction == "left"):
         while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
-            rotate(-5, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
-    else: # turn in + angle
+            rotate(-5, LEFT_MOTOR, RIGHT_MOTOR)
+    else:  # turn in + angle
         while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
-            rotate(+5, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate(+5, LEFT_MOTOR, RIGHT_MOTOR)
     stop(LEFT_MOTOR, RIGHT_MOTOR)
 
 
-    
 def start():
-    "Start left and right wheel motors"
+    "Start left and right motors"
     time.sleep(0.15)
     RIGHT_MOTOR.set_dps(FWD_SPEED)
     LEFT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(0.15)
 
 
-
-#COLOR CODE
+# COLOR CODE
 lakeColor = ["blueFloor"]
 cubesToAvoid = ["greenCube", "purpleCube"]
 poop = ["yellowCube", "orangeCube"]
@@ -161,17 +154,36 @@ obstacleDetectedRight = threading.Event()
 runColorSensorThread = threading.Event()
 runColorSensorThread.set()
 
+consecutiveYellowR = 0
+consecutiveYellowL = 0
+
+lineThreshold = 4
+
+lastColorDetectedL = ""
+lastColorDetectedR = ""
+
+currentColorDetectedL = ""
+currentColorDetectedR = ""
+
 
 def recognizeObstacles():
+    global consecutiveYellowR
+    global consecutiveYellowL
+    global lineThreshold
+    global lastColorDetectedL
+    global lastColorDetectedR
+    global currentColorDetectedL
+    global currentColorDetectedR
     print("started color thread")
     try:
         print("tryingToDectColor")
         while True:
-            rgbL = getAveragedValues(10, CS_L)
-            rgbR = getAveragedValues(10, CS_R)  # Get color data
-            
+            rgbL = getAveragedValues(5, CS_L)
+            rgbR = getAveragedValues(5, CS_R)  # Get color data
+
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
-            colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],rgbR[2])  # map color data to a known sample of colors
+            colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],
+                                                    rgbR[2])  # map color data to a known sample of colors
 
             if colorDetectedLeft in poop:
                 poopDetectedLeft.set()
@@ -182,7 +194,7 @@ def recognizeObstacles():
                 poopDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
             elif colorDetectedLeft in cubesToAvoid:
-                print(rgbL)
+                print(colorDetectedLeft)
                 obstacleDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 poopDetectedLeft.clear()
@@ -195,12 +207,13 @@ def recognizeObstacles():
                 poopDetectedRight.set()
                 obstacleDetectedRight.clear()
                 lakeDetectedRight.clear()
-                detect_and_grab()
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
             elif colorDetectedRight in lakeColor:
                 lakeDetectedRight.set()
                 poopDetectedRight.clear()
                 obstacleDetectedRight.clear()
             elif colorDetectedRight in cubesToAvoid:
+                print(colorDetectedRight)
                 obstacleDetectedRight.set()
                 poopDetectedRight.clear()
                 lakeDetectedRight.clear()
@@ -212,7 +225,7 @@ def recognizeObstacles():
             # sleep(0.25) in case a sleep is necessary to sync information between sensors
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
-    finally :
+    finally:
         exit()
 
 
@@ -229,12 +242,13 @@ if __name__ == "__main__":
         colorSensorThread.start()
         colorSensorThread.join()
         navigationThread.join()
-        
+
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
-    finally :
+    finally:
         reset_brick()
         exit()
+
 
 
 
