@@ -20,7 +20,7 @@ LIFT_MOTOR = Motor('C')
 
 
 def init_motors():
-    "Initialize all 4 motors"
+    "Initializes all 4 motors"
     try:
         # wheel motors
         LEFT_MOTOR.reset_encoder()
@@ -41,19 +41,17 @@ def init_motors():
 
 
 def navigation_program():
-    "Do an entire sweep of the board"
+    "Do an entire sweep of the board while doing 'S' motions"
     try:
         print("Starting board sweeping started")
-        do_first_s_shape(GYRO, US_SENSOR, LEFT_MOTOR, RIGHT_MOTOR)
+        do_s_shape(True)
         for i in range(NB_S - 1):
-            do_s_shape()
+            do_s_shape(False)
     except KeyboardInterrupt:
         print("Navigation program terminated")
     finally:
-        stop()
+        stop(LEFT_MOTOR, RIGHT_MOTOR)
         reset_brick()
-
-
 
 # COLOR CODE
 lakeColor = ["blueFloor"]
@@ -168,30 +166,26 @@ if __name__ == "__main__":
 
 
 
-
-
-
-
 # HELPER METHODS FOR NAVIGATION THAT CAN'T BE PUT IN navigation2.py
 # BECAUSE THEY NEED ACCESS TO THREAD EVENTS
 
 
-def move_fwd_until_wall(angle):
+def move_fwd_until_wall(angle, dist):
     """
     Makes the robot go in a straight line at the given angle (absolute angle
     rotated since start) by implementing the bang bang controller
 
-    The robot stops once it finds itself at a distance smaller than 3cm from
-    a wall
+    The robot stops once it finds itself at distance dist from the wall
     """
     try:
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         i = 0
-        while (US_SENSOR.get_value() > MIN_DIST_FROM_WALL):
+        while (US_SENSOR.get_value() > dist):
+            # TODO: implement lake avoiding
             if (lakeDetectedLeft.is_set()):
                 print("lake detected left")
-                break
+                break 
             if (lakeDetectedRight.is_set()):
                 print("lake detected right")
                 break
@@ -214,52 +208,48 @@ def move_fwd_until_wall(angle):
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR)
 
-            if (i % 5 != 0):  # increase delay for bang bang controller corrections
+            if (i != 0):  # increase the delay for bang bang controller corrections
                 time.sleep(0.2)
                 continue
             bang_bang_controller(angle, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            i += 1
+            i = (i + 1) % 5
         stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
     finally:
         exit()
 
-def do_s_shape():
+def do_s_shape(is_first: bool):
     """
     Do an "S" back and forth shape from wall to wall
+    
+    If is_first is set to true, then that means that the robot is at its starting
+    position on the board. The robot should therefore move away from the wall
+    in the start of its execution.
     """
+    
     # going in initial dir
     time.sleep(0.15)
-    move_fwd_until_wall(0)
+    if (is_first):
+        move_fwd_until_wall(-10, MIN_DIST_FROM_WALL)  # move away from the wall
+    else:
+        move_fwd_until_wall(0, MIN_DIST_FROM_WALL) # go straight
     time.sleep(0.15)
     rotate_at_wall("left", LEFT_MOTOR, RIGHT_MOTOR)  # going to angle -180 on gyro
+    
+    # move over to next straight path
+    time.sleep(0.15)
+    curr_wall_dist = US_SENSOR.get_value()
+    if (curr_wall_dist <= ROBOT_LEN + MIN_DIST_FROM_WALL):
+         move_fwd_until_wall(GYRO.get_abs_measure(), MIN_DIST_FROM_WALL)
+    else:
+        move_fwd_until_wall(GYRO.get_abs_measure(), curr_wall_dist - ROBOT_LEN)
+    
     # going in opposite dir
     time.sleep(0.15)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
-    time.sleep(0.15)
-    move_fwd_until_wall(-180)
+    move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
     time.sleep(0.15)
     rotate_at_wall("right", LEFT_MOTOR, RIGHT_MOTOR)  # going to angle 0 on gyro
-
-def do_first_s_shape():
-    """
-    Do an "S" back and forth shape from wall to wall. Before it reaches the
-    first wall, this method moves the robot further away from the wall to
-    account for its start position.
-    """
-    # going in initial dir
-    time.sleep(0.15)
-    move_fwd_until_wall(-10)  # move away from the wall
-    time.sleep(0.15)
-    rotate_at_wall("left")  # going to angle -180 on gyro
-    # going in opposite dir
-    time.sleep(0.15)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
-    time.sleep(0.15)
-    move_fwd_until_wall(-180)
-    time.sleep(0.15)
-    rotate_at_wall("right")  # going to angle 0 on gyro
 
 
 def turn_until_no_obstacle(direction: str):
