@@ -17,7 +17,7 @@ SPEED_LIMIT = 720
 
 ROBOT_LEN = 0.15  # m
 MAP_SIZE = 120  # cm
-NB_S = int((MAP_SIZE / ROBOT_LEN) / 2)  # number of back and forth s motions to cover the entire board
+NB_S = int((MAP_SIZE / (ROBOT_LEN*100)) / 2)  # number of back and forth s motions to cover the entire board
 FWD_SPEED = 300
 TRN_SPEED = 320
 
@@ -128,10 +128,6 @@ def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         LEFT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
         RIGHT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
-        # LEFT_MOTOR.set_position_relative((-distance*DIST_TO_DEG))
-        # RIGHT_MOTOR.set_position_relative((-distance*DIST_TO_DEG))
-        # print("set position to" + str(-distance * DIST_TO_DEG))
-        # wait_for_motor(RIGHT_MOTOR)
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print(error)
@@ -176,7 +172,7 @@ def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     and the return to its start position
     """
     # TODO: make this methods able to detect other obstacles and avoid them (edge case)
-    move_bwd(11, LEFT_MOTOR, RIGHT_MOTOR)
+    move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
     # set the angle for turning according to the placement of the obstacle
     if (direction == "left"):
         angle_dir = 1
