@@ -4,7 +4,7 @@ from grabber import *
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 from navigation2 import *
 
-looking_left = False
+going_left = True
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
 US_SENSOR = EV3UltrasonicSensor(2)
@@ -108,16 +108,16 @@ def move_fwd_until_wall(angle, dist):
             if (poopDetectedLeft.is_set()):
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected left")
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LEFT_MOTOR)
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
             if (poopDetectedRight.is_set()):
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LEFT_MOTOR)
+                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
 
             if (i != 0):  # increase the delay for bang bang controller corrections
                 time.sleep(0.2)
                 continue
-            bang_bang_controller(GYRO.get_abs_measure() - angle , LEFT_MOTOR, RIGHT_MOTOR)
+            #bang_bang_controller(GYRO.get_abs_measure() - angle , LEFT_MOTOR, RIGHT_MOTOR)
             i = (i + 1) % 5
         stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
@@ -254,8 +254,8 @@ if __name__ == "__main__":
     navigationThread.daemon = True
     try:
         navigationThread.start()
-        colorSensorThread.start()
-        colorSensorThread.join()
+        #colorSensorThread.start()
+        #colorSensorThread.join()
         navigationThread.join()
 
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
