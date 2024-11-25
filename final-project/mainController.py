@@ -4,7 +4,7 @@ from grabber import *
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 from navigation2 import *
 
-
+looking_left = False
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
 US_SENSOR = EV3UltrasonicSensor(2)
@@ -39,6 +39,26 @@ def init_motors():
     except IOError as error:
         print(error)
 
+def Eback_to_start():
+    global  looking_left
+
+    if looking_left == False:
+        angleRot = 1 # after testing we will determine the magnitude
+        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
+        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
+        looking_left = not looking_left
+        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+        move_fwd_until_wall(90*angleRot, MIN_DIST_FROM_WALL)
+
+    else:
+        angleRot = -1 # after testing we will determine the magnitude
+        move_fwd_until_wall(90*angleRot, MIN_DIST_FROM_WALL)
+        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+        move_fwd_until_wall(90*angleRot, MIN_DIST_FROM_WALL)
+        
+
+
 def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Method to avoid an obstacle (colored cube) following a predertermined path,
@@ -62,6 +82,7 @@ def move_fwd_until_wall(angle, dist):
 
     The robot stops once it finds itself at distance dist from the wall
     """
+    global looking_left
     try:
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
@@ -85,12 +106,12 @@ def move_fwd_until_wall(angle, dist):
                 else:
                     avoid_obstacle("right", LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
-                print("poop detected left")
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
+                print("poop detected left")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LEFT_MOTOR)
             if (poopDetectedRight.is_set()):
-                print("poop detected right")
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
+                print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LEFT_MOTOR)
 
             if (i != 0):  # increase the delay for bang bang controller corrections
@@ -105,6 +126,7 @@ def move_fwd_until_wall(angle, dist):
         exit()
 
 def do_s_shape(is_first: bool):
+    ''' try and have it so that the else statement does not go to the wall'''
     """
     Do an "S" back and forth shape from wall to wall
     
@@ -112,19 +134,37 @@ def do_s_shape(is_first: bool):
     position on the board. The robot should therefore move away from the wall
     in the start of its execution.
     """
-    
-    # going in initial dir
-    time.sleep(0.15)
+
+    global looking_left
     if (is_first):
         move_fwd_until_wall(-5, MIN_DIST_FROM_WALL)  # move away from the wall
+        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+        move_fwd(0.10, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+    else: 
+        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
+        looking_left = not looking_left
+        if looking_left == False:
+            rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+            move_fwd(0.10, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+            move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
+        else:
+            rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+            move_fwd(0.10, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+            move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
+
+'''
+   
     else:
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL) # go straight
     time.sleep(0.15)
     print("trying to rotate at wall")
     rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle -180 on gyro
-    
+   '''
     # move over to next straight path
-    time.sleep(0.15)
+'''time.sleep(0.15)
     curr_wall_dist = US_SENSOR.get_value()
     if (curr_wall_dist <= ROBOT_LEN + MIN_DIST_FROM_WALL):
         move_fwd_until_wall(GYRO.get_abs_measure(), MIN_DIST_FROM_WALL)
@@ -135,7 +175,7 @@ def do_s_shape(is_first: bool):
     time.sleep(0.15)
     move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
     time.sleep(0.15)
-    rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle 0 on gyro
+    rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle 0 on gyro'''
 
 def navigation_program():
     "Do an entire sweep of the board while doing 'S' motions"

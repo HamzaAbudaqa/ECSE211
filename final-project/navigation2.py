@@ -3,6 +3,7 @@ import time, math
 from colorSensorUtils import *
 from grabber import *
 
+
 MOTOR_POLL_DELAY = 0.2
 US_POLL_DELAY = 0.1
 
@@ -133,6 +134,9 @@ def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         print(error)
 
 
+
+
+    
 # def get_back_to_start(GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
 #     """
 #     Gets the robot back to the start area given that the start area
@@ -180,9 +184,9 @@ def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         angle_dir = -1
     # go around obstacle
     rotate(angle_dir*90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    move_fwd(4, LEFT_MOTOR, RIGHT_MOTOR)#hamza (assuming that direction is in cm )
     rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    move_fwd(4, LEFT_MOTOR, RIGHT_MOTOR)#hamza (assuming that direction is in cm)
     # get back on original path
     rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
     move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
