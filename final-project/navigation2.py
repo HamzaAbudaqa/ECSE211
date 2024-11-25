@@ -166,6 +166,29 @@ def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(US_POLL_DELAY)
 
+def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    """
+    Method to avoid an obstacle (colored cube) following a predertermined path,
+    and the return to its start position
+    """
+    # TODO: make this methods able to detect other obstacles and avoid them (edge case)
+    move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
+    # set the angle for turning according to the placement of the obstacle
+    if (direction == "left"):
+        angle_dir = 1
+    else:
+        angle_dir = -1
+    # go around obstacle
+    rotate(angle_dir*90, LEFT_MOTOR, RIGHT_MOTOR)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    # get back on original path
+    rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
+    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(angle_dir*90, LEFT_MOTOR, RIGHT_MOTOR)
+
+
 def rotate_single_wheel(abs_angle, Motor: Motor):
     """
     In-place rotation for the given (absolute) angle
@@ -213,9 +236,7 @@ def adjust(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, error):
 
 
 def zigZag(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, GYRO: EV3GyroSensor):
-    setup_for_zigZag(LEFT_MOTOR, RIGHT_MOTOR, GYRO)  # start the movement
-
-    try:
+    try :
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
@@ -229,34 +250,46 @@ def zigZag(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, GYRO: EV3GyroSensor):
 
         angleAfter = GYRO.get_abs_measure()
         changeInAngle = angleBefore - angleAfter
-        # adjust(LEFT_MOTOR, RIGHT_MOTOR, 22 - changeInAngle)
-
+        adjust(LEFT_MOTOR, RIGHT_MOTOR, 22 - changeInAngle)
+        time.sleep(0.25)
         angleBefore = GYRO.get_abs_measure()
 
         rotate_single_wheel(180 / 2, LEFT_MOTOR)
         rotate_single_wheel(180 / 6, RIGHT_MOTOR)  # ZigZag to the left
         wait_for_motor(RIGHT_MOTOR)
         wait_for_motor(LEFT_MOTOR)
-
         angleAfter = GYRO.get_abs_measure()
         changeInAngle = angleBefore - angleAfter
-        # adjust(LEFT_MOTOR, RIGHT_MOTOR, -22 - changeInAngle)
-
+        adjust(LEFT_MOTOR, RIGHT_MOTOR, -22 - changeInAngle)
     except IOError as error:
         print(error)
 
 
-# if __name__ == "__main__":
-#     try:
-#         #        navigation_program()
-#         GYRO = EV3GyroSensor(port=1, mode="abs")
-#         wait_ready_sensors()
-#         print(str(GYRO.get_abs_measure()))
-#         for i in range(4):
-#             zigZag(Motor('A'), Motor('D'), GYRO)
+def straightenOut(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, isRight) :
+    if isRight :
+        rotate(-22,LEFT_MOTOR,RIGHT_MOTOR)
+    else :
+        rotate(22,LEFT_MOTOR,RIGHT_MOTOR)
 
-#     except BaseException as e:
-#         print(e)
-#     finally:
-#         reset_brick()
+
+
+
+if __name__ == "__main__":
+     try:
+        GYRO = EV3GyroSensor(port=1, mode="abs")
+        LEFT_MOTOR = Motor('A')
+        RIGHT_MOTOR = Motor('D')
+        setup_for_zigZag(LEFT_MOTOR, RIGHT_MOTOR, GYRO)  # start the movement
+        #navigation_program()
+        wait_ready_sensors()
+        print(str(GYRO.get_abs_measure()))
+        for i in range(4):
+            zigZag(LEFT_MOTOR, RIGHT_MOTOR, GYRO)
+            sleep(0.25)
+        sleep(1)
+        straightenOut(LEFT_MOTOR, RIGHT_MOTOR, True)
+     except BaseException as e:
+         print(e)
+     finally:
+         reset_brick()
 
