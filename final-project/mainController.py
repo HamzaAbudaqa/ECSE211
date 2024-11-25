@@ -127,65 +127,26 @@ def move_fwd_until_wall(angle, dist):
 
 
 
-def do_s_shape(is_first: bool):
-    ''' try and have it so that the else statement does not go to the wall'''
-    """
-    Do an "S" back and forth shape from wall to wall
-    
-    If is_first is set to true, then that means that the robot is at its starting
-    position on the board. The robot should therefore move away from the wall
-    in the start of its execution.
-    """
+def do_s_shape():
 
-    global looking_left
-    if (is_first):
-        move_fwd_until_wall(-5, MIN_DIST_FROM_WALL)  # move away from the wall
-        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-        move_fwd(0.10, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-    else: 
-        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-        looking_left = not looking_left
-        if looking_left == False:
-            rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd(0.10, LEFT_MOTOR, RIGHT_MOTOR)
-            rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-        else:
-            rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd(0.10, LEFT_MOTOR, RIGHT_MOTOR)
-            rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-
-'''
-   
-    else:
+    global going_left
+    if (going_left):
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL) # go straight
-    time.sleep(0.15)
-    print("trying to rotate at wall")
-    rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle -180 on gyro
-   '''
-    # move over to next straight path
-'''time.sleep(0.15)
-    curr_wall_dist = US_SENSOR.get_value()
-    if (curr_wall_dist <= ROBOT_LEN + MIN_DIST_FROM_WALL):
-        move_fwd_until_wall(GYRO.get_abs_measure(), MIN_DIST_FROM_WALL)
+        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle -180 on gyro
     else:
-        move_fwd_until_wall(GYRO.get_abs_measure(), curr_wall_dist - ROBOT_LEN)
-    
-    # going in opposite dir
-    time.sleep(0.15)
-    move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
-    time.sleep(0.15)
-    rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle 0 on gyro'''
+        move_fwd_until_wall(-180, MIN_DIST_FROM_WALL) # go straight
+        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle 0 on gyro
+    going_left = not going_left
+
+
+
 
 def navigation_program():
     "Do an entire sweep of the board while doing 'S' motions"
     try:
         print("Starting board sweeping started")
-        do_s_shape(True)
-        for i in range(NB_S - 1):
-            do_s_shape(False)
+        for i in range(NB_S):
+            do_s_shape()
     except KeyboardInterrupt:
         print("Navigation program terminated")
     finally:
@@ -304,16 +265,3 @@ if __name__ == "__main__":
         exit()
 
 
-
-# HELPER METHODS FOR NAVIGATION THAT CAN'T BE PUT IN navigation2.py
-# BECAUSE THEY NEED ACCESS TO THREAD EVENTS
-
-
-def turn_until_no_obstacle(direction: str):
-    if (direction == "left"):
-        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
-            rotate(-5, LEFT_MOTOR, RIGHT_MOTOR)
-    else:  # turn in + angle
-        while (obstacleDetectedLeft.is_set() or obstacleDetectedRight.isSet()):
-            rotate(+5, LEFT_MOTOR, RIGHT_MOTOR)
-    stop(LEFT_MOTOR, RIGHT_MOTOR)
