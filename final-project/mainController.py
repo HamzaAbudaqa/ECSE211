@@ -125,6 +125,7 @@ def move_fwd_until_wall(angle, dist):
         reset_brick()
         exit()
 
+
 def do_s_shape(is_first: bool):
     ''' try and have it so that the else statement does not go to the wall'''
     """
