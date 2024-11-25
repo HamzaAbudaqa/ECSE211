@@ -49,11 +49,11 @@ def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     curr_angle = GYRO.get_abs_measure()
     curr_dist = US_SENSOR.get_value()
     if (direction == "left"):
-        move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN + 0.03))
-        move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN + 0.03))
+        move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN*100 + 3))
+        move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN*100 + 3))
     else:
-        move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN + 0.03))
-        move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN + 0.03))
+        move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN*100 + 3))
+        move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN*100 + 3))
 
 def move_fwd_until_wall(angle, dist):
     """
