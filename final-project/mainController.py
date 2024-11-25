@@ -39,6 +39,22 @@ def init_motors():
     except IOError as error:
         print(error)
 
+def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    """
+    Method to avoid an obstacle (colored cube) following a predertermined path,
+    and the return to its start position
+    """
+    time.sleep(0.5)
+    move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
+    curr_angle = GYRO.get_abs_measure()
+    curr_dist = US_SENSOR.get_value()
+    if (direction == "left"):
+        move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN + 0.03))
+        move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN + 0.03))
+    else:
+        move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN + 0.03))
+        move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN + 0.03))
+
 def move_fwd_until_wall(angle, dist):
     """
     Makes the robot go in a straight line at the given angle (absolute angle
@@ -85,7 +101,7 @@ def move_fwd_until_wall(angle, dist):
         stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
-    finally:
+        reset_brick()
         exit()
 
 def do_s_shape(is_first: bool):

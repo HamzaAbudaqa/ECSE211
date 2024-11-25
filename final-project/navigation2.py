@@ -166,29 +166,6 @@ def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(US_POLL_DELAY)
 
-def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    """
-    Method to avoid an obstacle (colored cube) following a predertermined path,
-    and the return to its start position
-    """
-    # TODO: make this methods able to detect other obstacles and avoid them (edge case)
-    move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
-    # set the angle for turning according to the placement of the obstacle
-    if (direction == "left"):
-        angle_dir = 1
-    else:
-        angle_dir = -1
-    # go around obstacle 
-    rotate(angle_dir*90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
-    rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
-    # get back on original path
-    rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
-    rotate(angle_dir*90, LEFT_MOTOR, RIGHT_MOTOR)
-
-
 def rotate_single_wheel(abs_angle, Motor: Motor):
     """
     In-place rotation for the given (absolute) angle
