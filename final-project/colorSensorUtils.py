@@ -27,9 +27,6 @@ poopColor = [yellowCube, orangeCube]
 # blueFloor = [0.205,0.315,0.480,"blueFloor"]
 # redFloor = [0.76, 0.18,0.06,"redFloor"]
 
-consecutiveMin = 10
-consecutiveMax = 15
-
 lakeColor = ["blueFloor"]
 cubesToAvoid = ["greenCube", "purpleCube"]
 poop = ["yellowCube", "orangeCube"]
@@ -92,8 +89,6 @@ class colorSensingSubsystem:
     def __init__(self, precision):
         self.past5L = []
         self.past5R = []
-        self.consecutiveR = 0
-        self.consecutiveL = 0
         self.sensorPrecision = precision
         self.currentReadingL = [0, 0, 0]
         self.currentReadingR = [0, 0, 0]
@@ -136,44 +131,6 @@ class colorSensingSubsystem:
         self.past5R.append([val, returnClosestValue(val[0], val[1], val[2])])
         if len(self.past5R) > 5:
             self.past5R.pop(0)
-
-    def getPoopDetectedL(self):
-        lastColorDetected = self.past5L[-2]
-        currentClosest = self.getClosestValue(self.currentReadingL)
-        lastClosest = self.getClosestValue(lastColorDetected)
-        if not lastClosest == "yellowCube":
-            print(lastColorDetected)
-            self.consecutiveL = 0
-            return False
-        elif self.consecutiveL >= consecutiveMin:
-            self.consecutiveL = 0
-            return True
-        elif currentClosest == "yellowCube" and currentClosest == lastClosest:
-            self.currentReadingL += 1
-            return False
-        elif self.consecutiveL < consecutiveMin and not currentClosest == "yellowCube":
-            print("line detected")
-            self.consecutiveL = 0
-            return False
-
-    def getPoopDetectedR(self):
-        lastColorDetected = self.past5R[-2]
-        currentClosest = self.getClosestValue(self.currentReadingR)
-        lastClosest = self.getClosestValue(lastColorDetected)
-        if not lastClosest == "yellowCube":
-            print(lastColorDetected)
-            self.consecutiveR = 0
-            return False
-        elif self.consecutiveR >= consecutiveMin:
-            self.consecutiveR = 0
-            return True
-        elif currentClosest == "yellowCube" and currentClosest == lastClosest:
-            self.currentReadingR += 1
-            return False
-        elif self.consecutiveR < consecutiveMin and not currentClosest == "yellowCube":
-            print("line detected")
-            self.consecutiveR = 0
-            return False
 
 
 if __name__ == "__main__":

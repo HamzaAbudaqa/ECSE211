@@ -189,26 +189,8 @@ obstacleDetectedRight = threading.Event()
 runColorSensorThread = threading.Event()
 runColorSensorThread.set()
 
-consecutiveYellowR = 0
-consecutiveYellowL = 0
-
-lineThreshold = 4
-
-lastColorDetectedL = ""
-lastColorDetectedR = ""
-
-currentColorDetectedL = ""
-currentColorDetectedR = ""
-
 
 def recognizeObstacles():
-    global consecutiveYellowR
-    global consecutiveYellowL
-    global lineThreshold
-    global lastColorDetectedL
-    global lastColorDetectedR
-    global currentColorDetectedL
-    global currentColorDetectedR
     print("started color thread")
     try:
         print("tryingToDectColor")
