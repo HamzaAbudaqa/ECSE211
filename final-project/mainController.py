@@ -5,6 +5,7 @@ from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, 
 from navigation2 import *
 
 going_left = True
+avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
 US_SENSOR = EV3UltrasonicSensor(2)
@@ -104,19 +105,25 @@ def move_fwd_until_wall(angle, dist):
     The robot stops once it finds itself at distance dist from the wall
     """
     try:
+        global avoiding_lake
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         i = 0
+        print("distance to stop at is : " + str(dist))
+        print("angle to follow is :" + str(angle))
+        print("absolute angle is :" + str(GYRO.get_abs_measure()))
         while (US_SENSOR.get_value() > dist):
             # TODO: implement lake avoiding
-            if (lakeDetectedLeft.is_set()):
+            if (lakeDetectedLeft.is_set() and not avoiding_lake):
                 print("lake detected left")
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
-            if (lakeDetectedRight.is_set()):
-                print("lake detected right")
+                avoid_lake(90,10)
+            if (lakeDetectedRight.is_set()and not avoiding_lake):
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
+                print("lake detected right")
+                avoid_lake(-90,10)
             if (obstacleDetectedLeft.is_set()):
                 print("object detected left")
                 if (US_SENSOR.get_value() < 15):  # not enough space to go around
@@ -137,7 +144,6 @@ def move_fwd_until_wall(angle, dist):
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-
             if (i != 0):  # increase the delay for bang bang controller corrections
                 time.sleep(0.2)
                 continue
@@ -202,7 +208,6 @@ def recognizeObstacles():
             colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],
                                                     rgbR[2])  # map color data to a known sample of colors
 
-            print(colorDetectedLeft)
             if colorDetectedLeft in poop:
                 poopDetectedLeft.set()
                 lakeDetectedLeft.clear()
@@ -244,6 +249,33 @@ def recognizeObstacles():
     finally:
         exit()
 
+def avoid_lake(angleOfRotation, distanceChange):
+    '''
+    Will go around a lake from the right, commented out code is for hard coded follow
+    '''
+    global avoiding_lake
+    avoiding_lake = True
+    print("avoiding lake with rotation:" + str(angleOfRotation))
+    time.sleep(0.10) #sleeps seem to improve stability
+    rotate(angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
+    print("done with first rotation")
+    currDistance = US_SENSOR.get_value()
+    curr_angle = GYRO.get_abs_measure()
+    move_fwd_until_wall(curr_angle + angleOfRotation,currDistance - distanceChange)
+    #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
+    time.sleep(0.10)
+    rotate(-angleOfRotation-30, LEFT_MOTOR, RIGHT_MOTOR) #added some extra rotation before is messes up?
+    currDistance = US_SENSOR.get_value()
+    #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
+    curr_angle = GYRO.get_abs_measure()
+    move_fwd_until_wall(curr_angle,currDistance - distanceChange)
+    if not lakeDetectedLeft.is_set() or not lakeDetectedRight.is_set():
+        avoiding_lake = False
+        curr_angle = GYRO.get_abs_measure()
+        move_fwd_until_wall(curr_angle,MIN_DIST_FROM_WALL)
+        print("done avoiding lake")
+
+
 
 if __name__ == "__main__":
     wait_ready_sensors()
@@ -253,11 +285,11 @@ if __name__ == "__main__":
     colorSensorThread.daemon = True
     navigationThread.daemon = True
     try:
-        # navigationThread.start()
-        # colorSensorThread.start()
-        # colorSensorThread.join()
-        # navigationThread.join()
-        avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
+         navigationThread.start()
+         colorSensorThread.start()
+         colorSensorThread.join()
+         navigationThread.join()
+        #avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
 
 
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
