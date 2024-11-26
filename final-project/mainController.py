@@ -40,14 +40,14 @@ def init_motors():
         print(error)
 
 def Eback_to_start():
-    global  looking_left
+    global  going_left
 
-    if looking_left == False:
+    if going_left == False:
         angleRot = 1 # after testing we will determine the magnitude
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
         rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-        looking_left = not looking_left
+        going_left = not going_left
         rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd_until_wall(90*angleRot, MIN_DIST_FROM_WALL)
 
@@ -82,8 +82,9 @@ def move_fwd_until_wall(angle, dist):
 
     The robot stops once it finds itself at distance dist from the wall
     """
-    global looking_left
     try:
+        LEFT_MOTOR.set_dps(FWD_SPEED)
+        RIGHT_MOTOR.set_dps(FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         i = 0
@@ -117,7 +118,7 @@ def move_fwd_until_wall(angle, dist):
             if (i != 0):  # increase the delay for bang bang controller corrections
                 time.sleep(0.2)
                 continue
-            #bang_bang_controller(GYRO.get_abs_measure() - angle , LEFT_MOTOR, RIGHT_MOTOR)
+            bang_bang_controller(GYRO.get_abs_measure() - angle , LEFT_MOTOR, RIGHT_MOTOR)
             i = (i + 1) % 5
         stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
@@ -248,9 +249,9 @@ if __name__ == "__main__":
     wait_ready_sensors()
     init_motors()
 
-    colorSensorThread = threading.Thread(target=recognizeObstacles)
+    #colorSensorThread = threading.Thread(target=recognizeObstacles)
     navigationThread = threading.Thread(target=navigation_program, daemon=True)
-    colorSensorThread.daemon = True
+    #colorSensorThread.daemon = True
     navigationThread.daemon = True
     try:
         navigationThread.start()

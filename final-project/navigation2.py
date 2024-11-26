@@ -8,7 +8,7 @@ MOTOR_POLL_DELAY = 0.2
 US_POLL_DELAY = 0.1
 
 RW = 0.022  # wheel radius
-RB = 0.065  # axle length
+RB = 0.05  # axle length
 
 DIST_TO_DEG = 180 / (3.1416 * RW)  # scale factor for distance
 ORIENT_TO_DEG = RB / RW  # scale factor for rotation
@@ -39,19 +39,6 @@ def wait_for_motor(motor: Motor):
         time.sleep(MOTOR_POLL_DELAY)
 
 
-# def init_motors(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-#     "Initialize left and right motors"
-#     try:
-#         LEFT_MOTOR.reset_encoder()
-#         LEFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-#         LEFT_MOTOR.set_power(0)
-#         RIGHT_MOTOR.reset_encoder()
-#         RIGHT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-#         RIGHT_MOTOR.set_power(0)
-#     except IOError as error:
-#         print(error)
-
-
 def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     In-place rotation for the given (absolute) angle
@@ -65,7 +52,6 @@ def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         RIGHT_MOTOR.set_limits(POWER_LIMIT, TRN_SPEED)
         LEFT_MOTOR.set_position_relative(int(angle * ORIENT_TO_DEG))
         RIGHT_MOTOR.set_position_relative(-int(angle * ORIENT_TO_DEG))
-
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print(error)
@@ -79,13 +65,10 @@ def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR
     - dir = "left" : left rotate (go from 0 to -180 deg on gyro)
     """
     try:
+        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         # go to -90 deg on gyro
-        if (dir == "right"):
-            print("rotating right")
-            rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
-        else:
-            print("rotating left 1")
-            rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
 
         # go straight for the length of the robot
         LEFT_MOTOR.set_dps(FWD_SPEED)
@@ -115,6 +98,7 @@ def move_fwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         LEFT_MOTOR.set_position_relative(int(distance * DIST_TO_DEG))
         RIGHT_MOTOR.set_position_relative(int(distance * DIST_TO_DEG))
+        wait_for_motor(LEFT_MOTOR)
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print(error)
@@ -132,20 +116,6 @@ def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print(error)
-
-
-
-
-    
-# def get_back_to_start(GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-#     """
-#     Gets the robot back to the start area given that the start area
-#     is in direction -270 deg (90 deg) abs angle on gyro
-#     """
-#     # initially, robot is at wall
-#     time.sleep(0.15)
-#     rotate(-270 - GYRO.get_abs_measure(), TRN_SPEED)  # turn in direction of start area
-#     move_fwd_until_wall(90, LEFT_MOTOR, RIGHT_MOTOR)
 
 
 def stop(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
@@ -169,28 +139,6 @@ def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         LEFT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(US_POLL_DELAY)
-
-def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    """
-    Method to avoid an obstacle (colored cube) following a predertermined path,
-    and the return to its start position
-    """
-    # TODO: make this methods able to detect other obstacles and avoid them (edge case)
-    move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
-    # set the angle for turning according to the placement of the obstacle
-    if (direction == "left"):
-        angle_dir = 1
-    else:
-        angle_dir = -1
-    # go around obstacle
-    rotate(angle_dir*90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(4, LEFT_MOTOR, RIGHT_MOTOR)#hamza (assuming that direction is in cm )
-    rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(4, LEFT_MOTOR, RIGHT_MOTOR)#hamza (assuming that direction is in cm)
-    # get back on original path
-    rotate(angle_dir*-90, LEFT_MOTOR, RIGHT_MOTOR)
-    move_fwd(ROBOT_LEN, LEFT_MOTOR, RIGHT_MOTOR)
-    rotate(angle_dir*90, LEFT_MOTOR, RIGHT_MOTOR)
 
 
 def rotate_single_wheel(abs_angle, Motor: Motor):
