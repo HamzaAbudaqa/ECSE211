@@ -2,8 +2,11 @@ from utils.brick import *
 from time import sleep
 from navigation2 import move_bwd
 
+# RIGHT_MOTOR = Motor('A')
+# LEFT_MOTOR = Motor('D')
 # CLAW_MOTOR = Motor('B')
 # LIFT_MOTOR = Motor('C')
+
 
 GRAB_POSITION = 300
 HIT_POSITION = 20
@@ -17,7 +20,7 @@ POWER_LIMIT = 50
 SPEED_LIMIT = 250
 HIGH_POWER_LIMIT = 80
 HIGH_SPEED_LIMIT = 300
-LIFT_POWER_LIMIT = 80
+LIFT_POWER_LIMIT = 90
 LIFT_SPEED_LIMIT = 150
 DUMP_WAIT_TIME = 3
 
@@ -99,6 +102,8 @@ def dump_storage(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
         # CLAW_MOTOR.set_position(initial_claw_position)
         LIFT_MOTOR.set_position(initial_lift_position + 40)
         sleep(1)
+        LIFT_MOTOR.set_position(initial_lift_position - 40)
+        sleep(1)
 
         print("Mission accomplished")
 
@@ -107,7 +112,7 @@ def dump_storage(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
 
 
 def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
-    move_bwd(4.2, LEFT_MOTOR, RIGHT_MOTOR)
+    move_bwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
     sleep(2)
     grab_and_release(CLAW_MOTOR, LIFT_MOTOR)
 
@@ -116,8 +121,11 @@ def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LI
 #     try:
 #         LIFT_MOTOR.reset_encoder()
 #         CLAW_MOTOR.reset_encoder()
-#         detect_and_grab(Motor('A'), Motor('D'))
-#         dump_storage()
+#         RIGHT_MOTOR.reset_encoder()
+#         LEFT_MOTOR.reset_encoder()
+        
+#         detect_and_grab(RIGHT_MOTOR, LEFT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+#         dump_storage(CLAW_MOTOR, LIFT_MOTOR)
 #     except BaseException as e:
 #         print(e)
 #     finally:
