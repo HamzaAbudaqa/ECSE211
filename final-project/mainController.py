@@ -45,18 +45,18 @@ def Eback_to_start():
     global going_left
 
     if going_left == False:
-        angleRot = 1  # after testing we will determine the magnitude
+        angleRot = -1  # after testing we will determine the magnitude
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(90*angleRot, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
         going_left = not going_left
-        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(90*angleRot, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd_until_wall(90 * angleRot, MIN_DIST_FROM_WALL)
 
     else:
         angleRot = -1  # after testing we will determine the magnitude
         move_fwd_until_wall(90 * angleRot, MIN_DIST_FROM_WALL)
-        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(90*angleRot, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd_until_wall(90 * angleRot, MIN_DIST_FROM_WALL)
 
 
@@ -118,12 +118,12 @@ def move_fwd_until_wall(angle, dist):
             # TODO: implement lake avoiding
             if (lakeDetectedLeft.is_set() and not avoiding_lake):
                 print("lake detected left")
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
-                avoid_lake(90,0.05)
+                #stop(LEFT_MOTOR, RIGHT_MOTOR)
+                #avoid_lake(90,10)
             if (lakeDetectedRight.is_set()and not avoiding_lake):
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
+                #stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("lake detected right")
-                avoid_lake(-90,0.05)
+                #avoid_lake(-90,10)
             if (obstacleDetectedLeft.is_set()):
                 print("object detected left")
                 if (US_SENSOR.get_value() < 15):  # not enough space to go around
@@ -144,10 +144,12 @@ def move_fwd_until_wall(angle, dist):
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-            # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections
-            time.sleep(0.2)
+            if (i != 0):  # increase the delay for bang bang controller corrections
+                time.sleep(0.2)
+                continue
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-            i = i+1
+            #i = (i + 1) % 5
+            i = i +1
         #stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
@@ -263,7 +265,7 @@ def avoid_lake(angleOfRotation, distanceChange):
     move_fwd_until_wall(curr_angle + angleOfRotation,currDistance - distanceChange)
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     time.sleep(0.10)
-    rotate(-angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(-angleOfRotation-30, LEFT_MOTOR, RIGHT_MOTOR)
     currDistance = US_SENSOR.get_value()
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     curr_angle = GYRO.get_abs_measure()
@@ -288,7 +290,6 @@ if __name__ == "__main__":
          colorSensorThread.start()
          colorSensorThread.join()
          navigationThread.join()
-        #Eback_to_start()
         #avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
 
 
