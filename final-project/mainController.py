@@ -108,8 +108,8 @@ def move_fwd_until_wall(angle, dist):
         global avoiding_lake
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
-        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED +  DELTA_SPEED + 10)
+        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED +  DELTA_SPEED + 10)
         i = 0
         print("distance to stop at is : " + str(dist))
         print("angle to follow is :" + str(angle))
@@ -118,12 +118,12 @@ def move_fwd_until_wall(angle, dist):
             # TODO: implement lake avoiding
             if (lakeDetectedLeft.is_set() and not avoiding_lake):
                 print("lake detected left")
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
-                avoid_lake(90,10)
+                #stop(LEFT_MOTOR, RIGHT_MOTOR)
+                #avoid_lake(90,10)
             if (lakeDetectedRight.is_set()and not avoiding_lake):
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
+                #stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("lake detected right")
-                avoid_lake(-90,10)
+                #avoid_lake(-90,10)
             if (obstacleDetectedLeft.is_set()):
                 print("object detected left")
                 if (US_SENSOR.get_value() < 15):  # not enough space to go around
@@ -148,8 +148,9 @@ def move_fwd_until_wall(angle, dist):
                 time.sleep(0.2)
                 continue
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-            i = (i + 1) % 5
-        stop(LEFT_MOTOR, RIGHT_MOTOR)
+            #i = (i + 1) % 5
+            i = i +1
+        #stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
         reset_brick()
@@ -251,12 +252,12 @@ def recognizeObstacles():
 
 def avoid_lake(angleOfRotation, distanceChange):
     '''
-    Will go around a lake from the right, commented out code is for hard coded follow
+    Will go around a lake from the right
     '''
     global avoiding_lake
     avoiding_lake = True
     print("avoiding lake with rotation:" + str(angleOfRotation))
-    time.sleep(0.10) #sleeps seem to improve stability
+    time.sleep(0.10)
     rotate(angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
     print("done with first rotation")
     currDistance = US_SENSOR.get_value()
@@ -264,7 +265,7 @@ def avoid_lake(angleOfRotation, distanceChange):
     move_fwd_until_wall(curr_angle + angleOfRotation,currDistance - distanceChange)
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     time.sleep(0.10)
-    rotate(-angleOfRotation-30, LEFT_MOTOR, RIGHT_MOTOR) #added some extra rotation before is messes up?
+    rotate(-angleOfRotation-30, LEFT_MOTOR, RIGHT_MOTOR)
     currDistance = US_SENSOR.get_value()
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     curr_angle = GYRO.get_abs_measure()

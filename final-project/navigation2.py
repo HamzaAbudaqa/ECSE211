@@ -23,7 +23,7 @@ FWD_SPEED = 300
 TRN_SPEED = 320
 
 # bang bang controller constants
-DEADBAND = 8  # degrees
+DEADBAND = 5  # degrees
 DELTA_SPEED = 40  # dps
 
 # put value small enough so that if it's following the wall
@@ -49,12 +49,9 @@ def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         print("rotating by setting motors to :" + str(angle * ORIENT_TO_DEG))
         LEFT_MOTOR.set_dps(TRN_SPEED)
         RIGHT_MOTOR.set_dps(TRN_SPEED)
-        LEFT_MOTOR.set_limits(POWER_LIMIT, TRN_SPEED)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, TRN_SPEED)
         LEFT_MOTOR.set_position_relative(int(angle * ORIENT_TO_DEG))
         RIGHT_MOTOR.set_position_relative(-int(angle * ORIENT_TO_DEG))
         wait_for_motor(RIGHT_MOTOR)
-        #wait_for_motor(LEFT_MOTOR)
     except IOError as error:
         print(error)
 
@@ -67,16 +64,9 @@ def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR
     - dir = "left" : left rotate (go from 0 to -180 deg on gyro)
     """
     try:
-        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         # go to -90 deg on gyro
         rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
 
-        # go straight for the length of the robot
-        LEFT_MOTOR.set_dps(FWD_SPEED)
-        RIGHT_MOTOR.set_dps(FWD_SPEED)
-        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
         RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
         wait_for_motor(RIGHT_MOTOR)
@@ -94,13 +84,13 @@ def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR
 
 def move_fwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     try:
-        LEFT_MOTOR.set_dps(FWD_SPEED)
-        RIGHT_MOTOR.set_dps(FWD_SPEED)
-        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        # not sure whether this works or not:
+        # LEFT_MOTOR.set_dps(FWD_SPEED)
+        # RIGHT_MOTOR.set_dps(FWD_SPEED)
+        # LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        # RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         LEFT_MOTOR.set_position_relative(int(distance * DIST_TO_DEG))
         RIGHT_MOTOR.set_position_relative(int(distance * DIST_TO_DEG))
-        #wait_for_motor(LEFT_MOTOR)
         wait_for_motor(RIGHT_MOTOR)
     except IOError as error:
         print(error)
@@ -109,10 +99,9 @@ def move_fwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
 def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     "Move the robot backward without turning for the given distance"
     try:
-        # LEFT_MOTOR.set_dps(-FWD_SPEED)
-        # RIGHT_MOTOR.set_dps(-FWD_SPEED)
-        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        # not sure whether this works or not:
+        # LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        # RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         LEFT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
         RIGHT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
         wait_for_motor(RIGHT_MOTOR)
