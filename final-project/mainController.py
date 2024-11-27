@@ -118,12 +118,12 @@ def move_fwd_until_wall(angle, dist):
             # TODO: implement lake avoiding
             if (lakeDetectedLeft.is_set() and not avoiding_lake):
                 print("lake detected left")
-                #stop(LEFT_MOTOR, RIGHT_MOTOR)
-                #avoid_lake(90,10)
+                stop(LEFT_MOTOR, RIGHT_MOTOR)
+                avoid_lake(90,0.05)
             if (lakeDetectedRight.is_set()and not avoiding_lake):
-                #stop(LEFT_MOTOR, RIGHT_MOTOR)
+                stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("lake detected right")
-                #avoid_lake(-90,10)
+                avoid_lake(-90,0.05)
             if (obstacleDetectedLeft.is_set()):
                 print("object detected left")
                 if (US_SENSOR.get_value() < 15):  # not enough space to go around
