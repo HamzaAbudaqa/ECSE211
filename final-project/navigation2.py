@@ -19,7 +19,7 @@ SPEED_LIMIT = 720
 ROBOT_LEN = 0.15  # m
 MAP_SIZE = 120  # cm
 NB_S = int((MAP_SIZE / (ROBOT_LEN*100)) / 2)  # number of back and forth s motions to cover the entire board
-FWD_SPEED = 300
+FWD_SPEED = 250
 TRN_SPEED = 320
 
 # bang bang controller constants
@@ -102,9 +102,6 @@ def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         # not sure whether this works or not:
         # LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         # RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
-        print("MOOOOOOOO")
-        print("moving back with : " + str(-distance*DIST_TO_DEG))
-        print("Speed is : " + str(LEFT_MOTOR.get_power()))
         LEFT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
         RIGHT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
         wait_for_motor(RIGHT_MOTOR)

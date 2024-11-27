@@ -4,7 +4,7 @@ from grabber import *
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 from navigation2 import *
 
-going_left = False
+going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
@@ -263,7 +263,7 @@ def avoid_lake(angleOfRotation, distanceChange):
     move_fwd_until_wall(curr_angle + angleOfRotation,currDistance - distanceChange)
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     time.sleep(0.10)
-    rotate(-angleOfRotation-30, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(-angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
     currDistance = US_SENSOR.get_value()
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     curr_angle = GYRO.get_abs_measure()
