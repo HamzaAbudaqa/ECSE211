@@ -75,7 +75,9 @@ def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
         rotate(-50, LEFT_MOTOR, RIGHT_MOTOR)
         # wait_for_motor(RIGHT_MOTOR)
-        move_fwd(0.07, LEFT_MOTOR, RIGHT_MOTOR)
+        distanceFromWall = US_SENSOR.get_value()
+        curr_angle = GYRO.get_abs_measure()
+        move_fwd_until_wall(curr_angle,distanceFromWall-0.07)
         rotate(-50, LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
         rotate(50, LEFT_MOTOR, RIGHT_MOTOR)
@@ -88,7 +90,9 @@ def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
         rotate(50, LEFT_MOTOR, RIGHT_MOTOR)
         # wait_for_motor(RIGHT_MOTOR)
-        move_fwd(0.07, LEFT_MOTOR, RIGHT_MOTOR)
+        distanceFromWall = US_SENSOR.get_value()
+        curr_angle = GYRO.get_abs_measure()
+        move_fwd_until_wall(curr_angle, distanceFromWall - 0.07)
         rotate(50, LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
         rotate(-50, LEFT_MOTOR, RIGHT_MOTOR)
@@ -142,12 +146,10 @@ def move_fwd_until_wall(angle, dist):
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-            if (i != 0):  # increase the delay for bang bang controller corrections
-                time.sleep(0.2)
-                continue
+                # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections
+            time.sleep(0.2)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-            #i = (i + 1) % 5
-            i = i +1
+            # stop(LEFT_MOTOR, RIGHT_MOTOR)
         #stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
