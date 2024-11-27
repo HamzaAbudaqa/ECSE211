@@ -139,11 +139,9 @@ def move_fwd_until_wall(angle, dist):
                 else:
                     avoid_obstacle("right", LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected left")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
             if (poopDetectedRight.is_set()):
-                stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                 # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections

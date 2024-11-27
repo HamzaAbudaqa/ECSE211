@@ -29,8 +29,6 @@ def grab_and_release(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     ''' Function to grab a block lift it & release it into storage unit '''
 
     try:
-        LIFT_MOTOR.reset_encoder()
-        CLAW_MOTOR.reset_encoder()
         initial_claw_position = CLAW_MOTOR.get_position()
         initial_lift_position = LIFT_MOTOR.get_position()
         print(initial_lift_position, initial_claw_position)
