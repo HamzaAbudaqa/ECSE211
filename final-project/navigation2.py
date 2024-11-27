@@ -118,16 +118,17 @@ def stop(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
 
 
 def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    print(str(error))
+    print("BANG BANG ERROR IS : " + str(error))
     if (abs(error) <= DEADBAND):  # no correction
+        print("no correction")
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     elif (error > 0):  # angle too big
-        # print("increasing right motor speed")
+        print("increasing right motor speed")
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
     else:  # angle too small
-        # print("increasing left motor speed")
+        print("increasing left motor speed")
         LEFT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(US_POLL_DELAY)

@@ -144,12 +144,10 @@ def move_fwd_until_wall(angle, dist):
                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-            if (i != 0):  # increase the delay for bang bang controller corrections
-                time.sleep(0.2)
-                continue
+            # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections
+            time.sleep(0.2)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-            #i = (i + 1) % 5
-            i = i +1
+            i = i+1
         #stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
@@ -265,7 +263,7 @@ def avoid_lake(angleOfRotation, distanceChange):
     move_fwd_until_wall(curr_angle + angleOfRotation,currDistance - distanceChange)
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     time.sleep(0.10)
-    rotate(-angleOfRotation-30, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(-angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
     currDistance = US_SENSOR.get_value()
     #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
     curr_angle = GYRO.get_abs_measure()
@@ -290,6 +288,7 @@ if __name__ == "__main__":
          colorSensorThread.start()
          colorSensorThread.join()
          navigationThread.join()
+        #Eback_to_start()
         #avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
 
 
