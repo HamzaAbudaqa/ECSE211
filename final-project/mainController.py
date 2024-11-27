@@ -4,7 +4,7 @@ from grabber import *
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 from navigation2 import *
 
-going_left = True
+going_left = False
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
@@ -43,21 +43,19 @@ def init_motors():
 
 def Eback_to_start():
     global going_left
-
     if going_left == False:
-        angleRot = -1  # after testing we will determine the magnitude
+        angleRot = 1  # after testing we will determine the magnitude
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-        rotate(90*angleRot, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
+        rotate(90*angleRot,LEFT_MOTOR, RIGHT_MOTOR)
+        move_fwd_until_wall(90*angleRot, MIN_DIST_FROM_WALL)
         going_left = not going_left
-        rotate(90*angleRot, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-        move_fwd_until_wall(90 * angleRot, MIN_DIST_FROM_WALL)
+        rotate(90*angleRot, LEFT_MOTOR, RIGHT_MOTOR)
+        move_fwd_until_wall(180*angleRot, MIN_DIST_FROM_WALL)
 
     else:
-        angleRot = -1  # after testing we will determine the magnitude
-        move_fwd_until_wall(90 * angleRot, MIN_DIST_FROM_WALL)
-        rotate(90*angleRot, GYRO, LEFT_MOTOR, RIGHT_MOTOR)
-        move_fwd_until_wall(90 * angleRot, MIN_DIST_FROM_WALL)
+        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
+        rotate(-90,LEFT_MOTOR, RIGHT_MOTOR)
+        move_fwd_until_wall(-90, MIN_DIST_FROM_WALL)
 
 
 def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
@@ -286,11 +284,12 @@ if __name__ == "__main__":
     colorSensorThread.daemon = True
     navigationThread.daemon = True
     try:
-         navigationThread.start()
-         colorSensorThread.start()
-         colorSensorThread.join()
-         navigationThread.join()
+         #navigationThread.start()
+         #colorSensorThread.start()
+         #colorSensorThread.join()
+         #navigationThread.join()
         #avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
+         Eback_to_start()
 
 
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)

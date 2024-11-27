@@ -102,6 +102,9 @@ def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         # not sure whether this works or not:
         # LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
         # RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED)
+        print("MOOOOOOOO")
+        print("moving back with : " + str(-distance*DIST_TO_DEG))
+        print("Speed is : " + str(LEFT_MOTOR.get_power()))
         LEFT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
         RIGHT_MOTOR.set_position_relative(-distance*DIST_TO_DEG)
         wait_for_motor(RIGHT_MOTOR)
@@ -116,6 +119,15 @@ def stop(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     LEFT_MOTOR.set_power(0)
     # time.sleep(0.15)
 
+def pause(duration, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    "Temporarily pauses the motors for a set duration"
+    rightMotorPower = RIGHT_MOTOR.get_power()
+    leftMotorPower = LEFT_MOTOR.get_power()
+    RIGHT_MOTOR.set_power(0)
+    LEFT_MOTOR.set_power(0)
+    time.sleep(duration)
+    RIGHT_MOTOR.set_power(rightMotorPower)
+    LEFT_MOTOR.set_power(leftMotorPower)
 
 def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     print("BANG BANG ERROR IS : " + str(error))
