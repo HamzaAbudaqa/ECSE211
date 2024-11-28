@@ -190,7 +190,7 @@ def move_fwd_until_wall(angle, dist):
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
             # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections
-            time.sleep(0.2)
+            time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             i = i+1
         #stop(LEFT_MOTOR, RIGHT_MOTOR)
@@ -249,8 +249,8 @@ def recognizeObstacles():
     try:
         print("tryingToDectColor")
         while True:
-            rgbL = getAveragedValues(10, CS_L)
-            rgbR = getAveragedValues(10, CS_R)  # Get color data
+            rgbL = getAveragedValues(15, CS_L)
+            rgbR = getAveragedValues(15, CS_R)  # Get color data
 
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
             colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],
