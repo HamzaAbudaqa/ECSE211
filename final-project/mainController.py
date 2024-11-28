@@ -19,6 +19,8 @@ LEFT_MOTOR = Motor('D')
 CLAW_MOTOR = Motor('B')
 LIFT_MOTOR = Motor('C')
 
+avoidance_offset = 0 #keeps track of how far right (>0) or left(<0) we have gone in one
+
 
 def init_motors():
     "Initializes all 4 motors"
@@ -70,53 +72,68 @@ def avoid_obstacle(direction: str, amplitude :int, LEFT_MOTOR: Motor, RIGHT_MOTO
     move_bwd(0.08, LEFT_MOTOR,RIGHT_MOTOR)
     if (direction == "left"):
         rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
+        time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall > 10):
             dodge_right(LEFT_MOTOR,RIGHT_MOTOR,0.25, smallMovement)
         else :
-            rotate(-180)
+            rotate(-180, LEFT_MOTOR, RIGHT_MOTOR)
             dodge_left(LEFT_MOTOR, RIGHT_MOTOR, 0.25, bigMovement)
     else:
         rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
+        time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall>10) :
             dodge_left(LEFT_MOTOR, RIGHT_MOTOR, 0.25, smallMovement)
         else :
-            rotate(180)
+            rotate(180, LEFT_MOTOR, RIGHT_MOTOR)
             dodge_right(LEFT_MOTOR, RIGHT_MOTOR, 0.25, bigMovement)
 
 
 
 def dodge_right(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, length : int, width : int):
+    global avoidance_offset
+
     distanceFromWall = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
     move_fwd_until_wall(curr_angle, distanceFromWall - width*100)
     rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
+    avoidance_offset += width
     if distanceFromWall < length:
         return
+    avoidance_offset -= width
+    time.sleep(0.1)
     move_fwd_until_wall(curr_angle, distanceFromWall - length*100)
     rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
     move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
+    time.sleep(0.1)
     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
 
 
 def dodge_left(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, length : int, width : int):
+    global avoidance_offset
+
     distanceFromWall = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
+    time.sleep(0.1)
     move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
+    avoidance_offset -= width
     curr_angle = GYRO.get_abs_measure()
     if distanceFromWall < length:
         return
+    time.sleep(0.1)
     move_fwd_until_wall(curr_angle, distanceFromWall - length * 100)
+    avoidance_offset += width
     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
+    time.sleep(0.1)
     move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
     rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
 
@@ -130,6 +147,7 @@ def move_fwd_until_wall(angle, dist):
     """
     try:
         global avoiding_lake
+        global avoidance_offset
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED +  DELTA_SPEED + 10)
@@ -138,38 +156,43 @@ def move_fwd_until_wall(angle, dist):
         print("distance to stop at is : " + str(dist))
         print("angle to follow is :" + str(angle))
         print("absolute angle is :" + str(GYRO.get_abs_measure()))
+
         while (US_SENSOR.get_value() > dist):
             # TODO: implement lake avoiding
-            if (lakeDetectedLeft.is_set() and not avoiding_lake):
+            if (lakeDetectedLeft.is_set()):
                 print("lake detected left")
                 #stop(LEFT_MOTOR, RIGHT_MOTOR)
-                #avoid_lake(90,10)
-            if (lakeDetectedRight.is_set()and not avoiding_lake):
+                avoidance_offset += 0.1
+                avoid_lake(90,0.1)
+            if (lakeDetectedRight.is_set()):
                 #stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("lake detected right")
-                #avoid_lake(-90,10)
+                avoidance_offset += 0.1
+                avoid_lake(-90,0.1)
             if (obstacleDetectedLeft.is_set()):
                 print("object detected left")
-                if (US_SENSOR.get_value() < 15):  # not enough space to go around
-                    break
-                else:
-                    avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
+                #if (US_SENSOR.get_value() < 15):  # not enough space to go around
+                #    break
+                #else:
+                avoid_obstacle("left",0, LEFT_MOTOR, RIGHT_MOTOR)
             if (obstacleDetectedRight.is_set()):
                 print("object detected right")
-                if (US_SENSOR.get_value() < 15):  # not enough space to go around
-                    break
-                else:
-                    avoid_obstacle("right", LEFT_MOTOR, RIGHT_MOTOR)
+                #if (US_SENSOR.get_value() < 15):  # not enough space to go around
+                #    break
+                #else:
+                avoid_obstacle("right",0, LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
+#                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected left")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
             if (poopDetectedRight.is_set()):
+#                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-                # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections
+            # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections
             time.sleep(0.2)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-            # stop(LEFT_MOTOR, RIGHT_MOTOR)
+            i = i+1
         #stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
@@ -177,14 +200,18 @@ def move_fwd_until_wall(angle, dist):
         exit()
 
 
+
 def do_s_shape():
     global going_left
+    global avoidance_offset
+
     if (going_left):
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle -180 on gyro
+        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR,avoidance_offset)  # going to angle -180 on gyro
     else:
         move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR)  # going to angle 0 on gyro
+        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR,avoidance_offset)  # going to angle 0 on gyro
+    avoidance_offset = 0
     going_left = not going_left
 
 
@@ -222,8 +249,8 @@ def recognizeObstacles():
     try:
         print("tryingToDectColor")
         while True:
-            rgbL = getAveragedValues(15, CS_L)
-            rgbR = getAveragedValues(15, CS_R)  # Get color data
+            rgbL = getAveragedValues(10, CS_L)
+            rgbR = getAveragedValues(10, CS_R)  # Get color data
 
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
             colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],
@@ -280,11 +307,13 @@ def avoid_lake(angleOfRotation, distanceChange):
     rotate(angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
     currDistance = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
-    move_fwd_until_wall(curr_angle,currDistance-distanceChange*100)
+    newDistance = currDistance-distanceChange*100
+    if newDistance < 0.1 :
+        newDistance = 0.1
     time.sleep(0.10)
+    move_fwd_until_wall(curr_angle,newDistance)
     rotate(-angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
     print("done avoiding lake")
-
 
 
 if __name__ == "__main__":
@@ -295,12 +324,12 @@ if __name__ == "__main__":
     colorSensorThread.daemon = True
     navigationThread.daemon = True
     try:
-         #navigationThread.start()
-         #colorSensorThread.start()
-         #colorSensorThread.join()
-         #navigationThread.join()
+         navigationThread.start()
+         colorSensorThread.start()
+         colorSensorThread.join()
+         navigationThread.join()
         #avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
-         Eback_to_start()
+         #Eback_to_start()
 
 
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)

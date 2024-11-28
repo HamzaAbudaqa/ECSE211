@@ -23,12 +23,12 @@ FWD_SPEED = 250
 TRN_SPEED = 320
 
 # bang bang controller constants
-DEADBAND = 5  # degrees
+DEADBAND = 2  # degrees
 DELTA_SPEED = 40  # dps
 
 # put value small enough so that if it's following the wall
 # the distance measured from the side won't have an impact
-MIN_DIST_FROM_WALL = 15  # cm
+MIN_DIST_FROM_WALL = 7  # cm
 
 
 def wait_for_motor(motor: Motor):
@@ -56,7 +56,7 @@ def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         print(error)
 
 
-def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor,offset : int):
     """
     Rotates the robot in the given direction and positions itself in
     the next row to sweep
@@ -66,6 +66,12 @@ def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR
     try:
         # go to -90 deg on gyro
         rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+        if offset > 0 : #robot has gone left too much, needs to go right
+            move_fwd(abs(offset), LEFT_MOTOR, RIGHT_MOTOR)
+        elif offset < 0:
+            rotate(GYRO.get_abs_measure()-180, LEFT_MOTOR, RIGHT_MOTOR)
+            move_fwd(abs(offset), LEFT_MOTOR, RIGHT_MOTOR)
+            rotate(GYRO.get_abs_measure() + 180, LEFT_MOTOR, RIGHT_MOTOR)
 
         LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
         RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))

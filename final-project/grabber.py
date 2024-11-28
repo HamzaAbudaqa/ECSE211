@@ -1,6 +1,6 @@
 from utils.brick import *
 from time import sleep
-from navigation2 import move_bwd, move_fwd
+# from navigation2 import move_bwd, move_fwd
 
 RIGHT_MOTOR = Motor('A')
 LEFT_MOTOR = Motor('D')
@@ -127,7 +127,7 @@ if __name__ == "__main__":
         RIGHT_MOTOR.reset_encoder()
         LEFT_MOTOR.reset_encoder()
         
-        detect_and_grab(RIGHT_MOTOR, LEFT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+#         detect_and_grab(RIGHT_MOTOR, LEFT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
         dump_storage(CLAW_MOTOR, LIFT_MOTOR)
     except BaseException as e:
         print(e)
