@@ -152,7 +152,6 @@ def move_fwd_until_wall(angle, dist):
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED +  DELTA_SPEED + 10)
         RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED +  DELTA_SPEED + 10)
-        i = 0
         print("distance to stop at is : " + str(dist))
         print("angle to follow is :" + str(angle))
         print("absolute angle is :" + str(GYRO.get_abs_measure()))
@@ -189,10 +188,8 @@ def move_fwd_until_wall(angle, dist):
 #                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected right")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-            # if ((i % 5) != 0):  # increase the delay for bang bang controller corrections
-            time.sleep(0.1)
+            time.sleep(0.2)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-            i = i+1
         #stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
