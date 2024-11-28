@@ -1,6 +1,6 @@
 from utils.brick import *
 from time import sleep
-from navigation2 import move_bwd
+from navigation2 import move_bwd, move_fwd
 
 RIGHT_MOTOR = Motor('A')
 LEFT_MOTOR = Motor('D')
@@ -48,6 +48,9 @@ def grab_and_release(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
         print("Lowering the arm")
         LIFT_MOTOR.set_position_relative(-250)
         sleep(2)
+
+        move_fwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
+        sleep(0.05)
 
         print("Closing claw")
         CLAW_MOTOR.set_position(25)

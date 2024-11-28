@@ -58,45 +58,67 @@ def Eback_to_start():
         move_fwd_until_wall(-90, MIN_DIST_FROM_WALL)
 
 
-def avoid_obstacle(direction: str, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+def avoid_obstacle(direction: str, amplitude :int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Method to avoid an obstacle (colored cube) following a predertermined path,
     and the return to its start position
     """
     time.sleep(0.5)
     # move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
-    curr_angle = GYRO.get_abs_measure()
-    curr_dist = US_SENSOR.get_value()
+    smallMovement = 0.05
+    bigMovement = 0.1
+    move_bwd(0.08, LEFT_MOTOR,RIGHT_MOTOR)
     if (direction == "left"):
-        # move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN*100 + 3))
-        # move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN*100 + 3))
-        rotate(50, LEFT_MOTOR, RIGHT_MOTOR)
-        # wait_for_motor(RIGHT_MOTOR)
-        move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(-50, LEFT_MOTOR, RIGHT_MOTOR)
-        # wait_for_motor(RIGHT_MOTOR)
+        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
         distanceFromWall = US_SENSOR.get_value()
-        curr_angle = GYRO.get_abs_measure()
-        move_fwd_until_wall(curr_angle,distanceFromWall-0.07)
-        rotate(-50, LEFT_MOTOR, RIGHT_MOTOR)
-        move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(50, LEFT_MOTOR, RIGHT_MOTOR)
-        # wait_for_motor(RIGHT_MOTOR)
+        if (distanceFromWall > 10):
+            dodge_right(LEFT_MOTOR,RIGHT_MOTOR,0.25, smallMovement)
+        else :
+            rotate(-180)
+            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, 0.25, bigMovement)
     else:
-        # move_fwd_until_wall(curr_angle + 10, curr_dist - ( ROBOT_LEN*100 + 3))
-        # move_fwd_until_wall(curr_angle - 10, curr_dist - ( ROBOT_LEN*100 + 3))
-        rotate(-50, LEFT_MOTOR, RIGHT_MOTOR)
-        # wait_for_motor(RIGHT_MOTOR)
-        move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(50, LEFT_MOTOR, RIGHT_MOTOR)
-        # wait_for_motor(RIGHT_MOTOR)
+        rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
         distanceFromWall = US_SENSOR.get_value()
-        curr_angle = GYRO.get_abs_measure()
-        move_fwd_until_wall(curr_angle, distanceFromWall - 0.07)
-        rotate(50, LEFT_MOTOR, RIGHT_MOTOR)
-        move_fwd(0.12, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(-50, LEFT_MOTOR, RIGHT_MOTOR)
-        # wait_for_motor(RIGHT_MOTOR)
+        if (distanceFromWall>10) :
+            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, 0.25, smallMovement)
+        else :
+            rotate(180)
+            dodge_right(LEFT_MOTOR, RIGHT_MOTOR, 0.25, bigMovement)
+
+
+
+def dodge_right(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, length : int, width : int):
+    distanceFromWall = US_SENSOR.get_value()
+    curr_angle = GYRO.get_abs_measure()
+    move_fwd_until_wall(curr_angle, distanceFromWall - width*100)
+    rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
+    distanceFromWall = US_SENSOR.get_value()
+    curr_angle = GYRO.get_abs_measure()
+    if distanceFromWall < length:
+        return
+    move_fwd_until_wall(curr_angle, distanceFromWall - length*100)
+    rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
+    distanceFromWall = US_SENSOR.get_value()
+    curr_angle = GYRO.get_abs_measure()
+    move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
+    rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
+
+
+def dodge_left(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, length : int, width : int):
+    distanceFromWall = US_SENSOR.get_value()
+    curr_angle = GYRO.get_abs_measure()
+    move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
+    rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
+    distanceFromWall = US_SENSOR.get_value()
+    curr_angle = GYRO.get_abs_measure()
+    if distanceFromWall < length:
+        return
+    move_fwd_until_wall(curr_angle, distanceFromWall - length * 100)
+    rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
+    distanceFromWall = US_SENSOR.get_value()
+    curr_angle = GYRO.get_abs_measure()
+    move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
+    rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
 
 
 def move_fwd_until_wall(angle, dist):
@@ -252,27 +274,16 @@ def avoid_lake(angleOfRotation, distanceChange):
     '''
     Will go around a lake from the right
     '''
-    global avoiding_lake
-    avoiding_lake = True
     print("avoiding lake with rotation:" + str(angleOfRotation))
     time.sleep(0.10)
+    move_bwd(distanceChange*0.8,LEFT_MOTOR,RIGHT_MOTOR)
     rotate(angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
-    print("done with first rotation")
     currDistance = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
-    move_fwd_until_wall(curr_angle + angleOfRotation,currDistance - distanceChange)
-    #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
+    move_fwd_until_wall(curr_angle,currDistance-distanceChange*100)
     time.sleep(0.10)
     rotate(-angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
-    currDistance = US_SENSOR.get_value()
-    #move_fwd(0.15,LEFT_MOTOR,RIGHT_MOTOR)
-    curr_angle = GYRO.get_abs_measure()
-    move_fwd_until_wall(curr_angle,currDistance - distanceChange)
-    if not lakeDetectedLeft.is_set() or not lakeDetectedRight.is_set():
-        avoiding_lake = False
-        curr_angle = GYRO.get_abs_measure()
-        move_fwd_until_wall(curr_angle,MIN_DIST_FROM_WALL)
-        print("done avoiding lake")
+    print("done avoiding lake")
 
 
 
