@@ -58,6 +58,30 @@ def Eback_to_start():
         rotate(-90,LEFT_MOTOR, RIGHT_MOTOR)
         move_fwd_until_wall(-90, MIN_DIST_FROM_WALL)
 
+def check_for_wall():
+    global start_time
+    global gyro_readings
+    current_angle = GYRO.get_value()
+    gyro_readings.append(current_angle)
+    if len(gyro_readings) > 10:
+        gyro_readings.pop(0) #list size within last 1 sec
+    
+    total_gyro_change = 0
+    for i in range(1, len(gyro_readings)):
+        total_gyro_change += abs(gyro_readings[i] - gyro_readings[i - 1])
+    
+    if total_gyro_change < GYRO_THRESHOLD:
+        if start_time is None:
+            start_time = time.time()
+        elif time.time() - start_time > TIME_LIMIT:
+            print ("Moving backward, stuck for too long at wall")
+            move_bwd(0.5, LEFT_MOTOR, RIGHT_MOTOR)
+            start_time = None
+    else:
+        start_time = None
+gyro_readings = []
+GYRO_THRESHOLD = 5
+TIME_LIMIT = 5
 
 def avoid_obstacle(direction: str, amplitude :float, curr_straight: int):
     """
@@ -67,6 +91,9 @@ def avoid_obstacle(direction: str, amplitude :float, curr_straight: int):
     # move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
     smallMovement = 0.05
     bigMovement = 0.1
+
+    check_for_wall()
+
     move_bwd(0.08, LEFT_MOTOR,RIGHT_MOTOR)
     if (direction == "left"):
         rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
@@ -154,7 +181,9 @@ def move_fwd_until_wall(angle, dist):
         print("angle to follow is :" + str(angle))
         print("absolute angle is :" + str(GYRO.get_abs_measure()))
 
+
         while (US_SENSOR.get_value() > dist):
+            
             if (lakeDetectedLeft.is_set()):
                 print("LAKE LEFT")
                 # avoidance_offset += 0.1
@@ -187,6 +216,7 @@ def move_fwd_until_wall(angle, dist):
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
+            check_for_wall()
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
         reset_brick()
