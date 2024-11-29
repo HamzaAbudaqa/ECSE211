@@ -24,7 +24,7 @@ TRN_SPEED = 320
 
 # bang bang controller constants
 DEADBAND = 2  # degrees
-DELTA_SPEED = 50  # dps
+DELTA_SPEED = 70  # dps
 
 # put value small enough so that if it's following the wall
 # the distance measured from the side won't have an impact
