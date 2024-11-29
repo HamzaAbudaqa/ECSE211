@@ -110,7 +110,7 @@ def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR
 
 
 def move_fwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    "Move the robot backward without turning for the given distance"
+    "Move the robot foward without turning for the given distance"
     try:
         LEFT_MOTOR.set_position_relative(int(distance * DIST_TO_DEG))
         RIGHT_MOTOR.set_position_relative(int(distance * DIST_TO_DEG))
