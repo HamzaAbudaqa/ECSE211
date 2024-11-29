@@ -134,3 +134,32 @@ def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         LEFT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(US_POLL_DELAY)
+
+
+def avoid_obstacle(direction: str, LEFT_MOTOR:Motor,RIGHT_MOTOR : Motor, US_SENSOR : EV3UltrasonicSensor):
+    """
+    Method to avoid an obstacle (colored cube) following a predertermined path,
+    and the return to its start position
+    """
+    # move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
+    smallMovement = 0.05
+    bigMovement = 0.1
+
+    move_bwd(0.08, LEFT_MOTOR, RIGHT_MOTOR)
+    if (direction == "left"):
+        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
+        time.sleep(0.1)
+        distanceFromWall = US_SENSOR.get_value()
+        if (distanceFromWall > 10):
+            rotate(-45, LEFT_MOTOR, RIGHT_MOTOR)
+        else:
+            rotate(-100, LEFT_MOTOR, RIGHT_MOTOR)
+    else:
+        rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
+        time.sleep(0.1)
+        distanceFromWall = US_SENSOR.get_value()
+        if (distanceFromWall > 10):
+            rotate(45, LEFT_MOTOR, RIGHT_MOTOR)
+        else:
+            rotate(100, LEFT_MOTOR, RIGHT_MOTOR)
+

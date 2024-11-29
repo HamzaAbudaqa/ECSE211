@@ -210,7 +210,6 @@ def move_fwd_until_wall(angle, dist):
 
 
 # Show the results : this can be altered however you like
-print("It took", length, "seconds!")
 def do_s_shape():
     global going_left
     global avoidance_offset
