@@ -22,27 +22,6 @@ LIFT_MOTOR = Motor('C')
 avoidance_offset = 0 #keeps track of how far right (>0) or left(<0) we have gone in one
 
 
-def init_motors():
-    "Initializes all 4 motors"
-    try:
-        # wheel motors
-        LEFT_MOTOR.reset_encoder()
-        LEFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        LEFT_MOTOR.set_power(0)
-        RIGHT_MOTOR.reset_encoder()
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        RIGHT_MOTOR.set_power(0)
-        # claw motors
-        CLAW_MOTOR.reset_encoder()
-        CLAW_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        CLAW_MOTOR.set_power(0)
-        LIFT_MOTOR.reset_encoder()
-        LIFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        LIFT_MOTOR.set_power(0)
-    except IOError as error:
-        print(error)
-
-
 def Eback_to_start():
     global going_left
     if going_left == False:
@@ -87,7 +66,6 @@ def avoid_obstacle(direction: str, amplitude :float, LEFT_MOTOR: Motor, RIGHT_MO
         else :
             rotate(180, LEFT_MOTOR, RIGHT_MOTOR)
             dodge_right(LEFT_MOTOR, RIGHT_MOTOR, amplitude, bigMovement)
-
 
 
 def dodge_right(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, length : int, width : int):
@@ -156,45 +134,40 @@ def move_fwd_until_wall(angle, dist):
         print("absolute angle is :" + str(GYRO.get_abs_measure()))
 
         while (US_SENSOR.get_value() > dist):
-            # TODO: implement lake avoiding
             if (lakeDetectedLeft.is_set()):
-                print("lake detected left")
-                #stop(LEFT_MOTOR, RIGHT_MOTOR)
+                print("LAKE LEFT")
                 avoidance_offset += 0.1
                 avoid_lake(90,0.1)
             if (lakeDetectedRight.is_set()):
-                #stop(LEFT_MOTOR, RIGHT_MOTOR)
-                print("lake detected right")
+                print("LAKE RIGHT")
                 avoidance_offset += 0.1
                 avoid_lake(-90,0.1)
             if (obstacleDetectedLeft.is_set()):
-                print("object detected left")
-                #if (US_SENSOR.get_value() < 15):  # not enough space to go around
-                #    break
-                #else:
-                avoid_obstacle("left",0.25, LEFT_MOTOR, RIGHT_MOTOR)
+                print("OBSTACLE LEFT")
+                if (US_SENSOR.get_value() < 25):  # not enough space to go around
+                    move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
+                    break
+                else:
+                    avoid_obstacle("left",0.25, LEFT_MOTOR, RIGHT_MOTOR)
             if (obstacleDetectedRight.is_set()):
-                print("object detected right")
-                #if (US_SENSOR.get_value() < 15):  # not enough space to go around
-                #    break
-                #else:
-                avoid_obstacle("right",0.25, LEFT_MOTOR, RIGHT_MOTOR)
+                print("OBSTACLE RIGHT")
+                if (US_SENSOR.get_value() < 25):  # not enough space to go around
+                    move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
+                    break
+                else:
+                    avoid_obstacle("right",0.25, LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
-#                 stop(LEFT_MOTOR, RIGHT_MOTOR)
-                print("poop detected left")
+                print("POOP LEFT")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
             if (poopDetectedRight.is_set()):
-#                 stop(LEFT_MOTOR, RIGHT_MOTOR)
-                print("poop detected right")
+                print("POOP RIGHT")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
             time.sleep(0.2)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-        #stop(LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
         reset_brick()
         exit()
-
 
 
 def do_s_shape():
@@ -220,7 +193,6 @@ def navigation_program():
     except KeyboardInterrupt:
         print("Navigation program terminated")
     finally:
-        stop(LEFT_MOTOR, RIGHT_MOTOR)
         reset_brick()
 
 
@@ -293,6 +265,7 @@ def recognizeObstacles():
     finally:
         exit()
 
+
 def avoid_lake(angleOfRotation, distanceChange):
     '''
     Will go around a lake from the right
@@ -326,8 +299,6 @@ if __name__ == "__main__":
          navigationThread.join()
         #avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
          #Eback_to_start()
-
-
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
     finally:
