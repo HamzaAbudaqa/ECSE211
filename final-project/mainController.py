@@ -4,6 +4,7 @@ from grabber import *
 from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
 from navigation2 import *
 
+
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
@@ -21,6 +22,25 @@ LIFT_MOTOR = Motor('C')
 
 avoidance_offset = 0 #keeps track of how far right (>0) or left(<0) we have gone in one
 
+def init_motors():
+    "Initializes all 4 motors"
+    try:
+        # wheel motors
+        LEFT_MOTOR.reset_encoder()
+        LEFT_MOTOR.set_limits(POWER_LIMIT,  FWD_SPEED +  DELTA_SPEED + 10)
+        LEFT_MOTOR.set_power(0)
+        RIGHT_MOTOR.reset_encoder()
+        RIGHT_MOTOR.set_limits(POWER_LIMIT,  FWD_SPEED +  DELTA_SPEED + 10)
+        RIGHT_MOTOR.set_power(0)
+        # claw motors
+        CLAW_MOTOR.reset_encoder()
+        CLAW_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        CLAW_MOTOR.set_power(0)
+        LIFT_MOTOR.reset_encoder()
+        LIFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
+        LIFT_MOTOR.set_power(0)
+    except IOError as error:
+        print(error)
 
 def Eback_to_start():
     global going_left
@@ -130,8 +150,7 @@ def move_fwd_until_wall(angle, dist):
         global avoidance_offset
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
-        LEFT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED +  DELTA_SPEED + 10)
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, FWD_SPEED +  DELTA_SPEED + 10)
+        print("curr distance to wall is : " + str(US_SENSOR.get_value()))
         print("distance to stop at is : " + str(dist))
         print("angle to follow is :" + str(angle))
         print("absolute angle is :" + str(GYRO.get_abs_measure()))
@@ -167,7 +186,7 @@ def move_fwd_until_wall(angle, dist):
             if (poopDetectedRight.is_set()):
                 print("POOP RIGHT")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-            time.sleep(0.2)
+            time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
@@ -198,6 +217,7 @@ def navigation_program():
     except KeyboardInterrupt:
         print("Navigation program terminated")
     finally:
+        stop(LEFT_MOTOR, RIGHT_MOTOR)
         reset_brick()
 
 
@@ -270,20 +290,18 @@ def recognizeObstacles():
     finally:
         exit()
 
-
 def avoid_lake(angleOfRotation, distanceChange):
     '''
     Will go around a lake from the right
     '''
+    originalAngle = GYRO.get_abs_measure()
     print("avoiding lake with rotation:" + str(angleOfRotation))
-    time.sleep(0.05)
+    time.sleep(0.1)
     move_bwd(distanceChange*0.8,LEFT_MOTOR,RIGHT_MOTOR)
     rotate(angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
     currDistance = US_SENSOR.get_value()
     curr_angle = GYRO.get_abs_measure()
-    newDistance = currDistance-distanceChange*100
-    if newDistance < 0.1 :
-        newDistance = 0.1
+    newDistance = max(currDistance-distanceChange*100,7)
     time.sleep(0.10)
     move_fwd_until_wall(curr_angle,newDistance)
     rotate(-angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
