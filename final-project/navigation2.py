@@ -24,32 +24,11 @@ TRN_SPEED = 320
 
 # bang bang controller constants
 DEADBAND = 2  # degrees
-DELTA_SPEED = 40  # dps
+DELTA_SPEED = 50  # dps
 
 # put value small enough so that if it's following the wall
 # the distance measured from the side won't have an impact
-MIN_DIST_FROM_WALL = 7  # cm
-
-
-def init_motors(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
-    "Initializes all 4 motors"
-    try:
-        # wheel motors
-        LEFT_MOTOR.reset_encoder()
-        LEFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        LEFT_MOTOR.set_power(0)
-        RIGHT_MOTOR.reset_encoder()
-        RIGHT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        RIGHT_MOTOR.set_power(0)
-        # claw motors
-        CLAW_MOTOR.reset_encoder()
-        CLAW_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        CLAW_MOTOR.set_power(0)
-        LIFT_MOTOR.reset_encoder()
-        LIFT_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
-        LIFT_MOTOR.set_power(0)
-    except IOError as error:
-        print(error)
+MIN_DIST_FROM_WALL = 10  # cm
 
 
 def wait_for_motor(motor: Motor):
@@ -67,7 +46,7 @@ def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     - angle < 0: rotate left
     """
     try:
-        print("rotating by setting motors to :" + str(angle * ORIENT_TO_DEG))
+        print("rotating by setting motors to :" + str(angle))
         LEFT_MOTOR.set_dps(TRN_SPEED)
         RIGHT_MOTOR.set_dps(TRN_SPEED)
         LEFT_MOTOR.set_position_relative(int(angle * ORIENT_TO_DEG))
