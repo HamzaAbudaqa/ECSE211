@@ -109,6 +109,15 @@ def dodge_left(length : int, width : int, curr_straight: int):
     rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
 
 
+def turn_until_no_lake(direction: str):
+    if (direction == "left"):
+        while (lakeDetectedLeft.is_set() or lakeDetectedRight.isSet()):
+            rotate(-5, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+    else: # turn in + angle
+        while (lakeDetectedLeft.is_set() or lakeDetectedRight.isSet()):
+            rotate(+5, TRN_SPEED, LEFT_MOTOR, RIGHT_MOTOR)
+
+
 def move_fwd_until_wall(angle, dist):
     """
     Makes the robot go in a straight line at the given angle (absolute angle
@@ -130,12 +139,14 @@ def move_fwd_until_wall(angle, dist):
         while (US_SENSOR.get_value() > dist):
             if (lakeDetectedLeft.is_set()):
                 print("LAKE LEFT")
-                avoidance_offset += 0.1
-                avoid_lake(90,0.1)
+                # avoidance_offset += 0.1
+                # avoid_lake(90,0.1)
+                turn_until_no_lake("left")
             if (lakeDetectedRight.is_set()):
                 print("LAKE RIGHT")
-                avoidance_offset += 0.1
-                avoid_lake(-90,0.1)
+                # avoidance_offset += 0.1
+                # avoid_lake(-90,0.1)
+                turn_until_no_lake("right")
             if (obstacleDetectedLeft.is_set()):
                 print("OBSTACLE LEFT")
                 if (US_SENSOR.get_value() < 25):  # not enough space to go around
