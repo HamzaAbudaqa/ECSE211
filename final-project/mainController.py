@@ -39,7 +39,7 @@ def Eback_to_start():
         move_fwd_until_wall(-90, MIN_DIST_FROM_WALL)
 
 
-def avoid_obstacle(direction: str, amplitude :float, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+def avoid_obstacle(direction: str, amplitude :float, curr_straight: int):
     """
     Method to avoid an obstacle (colored cube) following a predertermined path,
     and the return to its start position
@@ -53,65 +53,59 @@ def avoid_obstacle(direction: str, amplitude :float, LEFT_MOTOR: Motor, RIGHT_MO
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall > 10):
-            dodge_right(LEFT_MOTOR,RIGHT_MOTOR,amplitude, smallMovement)
+            dodge_right(amplitude, smallMovement, curr_straight)
         else :
             rotate(-180, LEFT_MOTOR, RIGHT_MOTOR)
-            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, amplitude, bigMovement)
+            dodge_left(amplitude, bigMovement, curr_straight)
     else:
         rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall>10) :
-            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, amplitude, smallMovement)
+            dodge_left(amplitude, smallMovement, curr_straight)
         else :
             rotate(180, LEFT_MOTOR, RIGHT_MOTOR)
-            dodge_right(LEFT_MOTOR, RIGHT_MOTOR, amplitude, bigMovement)
+            dodge_right(amplitude, bigMovement, curr_straight)
 
 
-def dodge_right(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, length : int, width : int):
+def dodge_right(length : int, width : int, curr_straight: int):
     global avoidance_offset
 
     distanceFromWall = US_SENSOR.get_value()
-    curr_angle = GYRO.get_abs_measure()
-    move_fwd_until_wall(curr_angle, distanceFromWall - width*100)
+    move_fwd_until_wall(curr_straight, distanceFromWall - width*100)
     rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
-    curr_angle = GYRO.get_abs_measure()
     avoidance_offset += width
     if distanceFromWall < length:
         return
     avoidance_offset -= width
     time.sleep(0.1)
-    move_fwd_until_wall(curr_angle, distanceFromWall - length*100)
+    move_fwd_until_wall(curr_straight, distanceFromWall - length*100)
     rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
-    curr_angle = GYRO.get_abs_measure()
-    move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
+    move_fwd_until_wall(curr_straight, distanceFromWall - width * 100)
     time.sleep(0.1)
     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
 
 
-def dodge_left(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, length : int, width : int):
+def dodge_left(length : int, width : int, curr_straight: int):
     global avoidance_offset
 
     distanceFromWall = US_SENSOR.get_value()
-    curr_angle = GYRO.get_abs_measure()
     time.sleep(0.1)
-    move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
+    move_fwd_until_wall(curr_straight, distanceFromWall - width * 100)
     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
     avoidance_offset -= width
-    curr_angle = GYRO.get_abs_measure()
     if distanceFromWall < length:
         return
     time.sleep(0.1)
-    move_fwd_until_wall(curr_angle, distanceFromWall - length * 100)
+    move_fwd_until_wall(curr_straight, distanceFromWall - length * 100)
     avoidance_offset += width
     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
     distanceFromWall = US_SENSOR.get_value()
-    curr_angle = GYRO.get_abs_measure()
     time.sleep(0.1)
-    move_fwd_until_wall(curr_angle, distanceFromWall - width * 100)
+    move_fwd_until_wall(curr_straight, distanceFromWall - width * 100)
     rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
 
 
@@ -148,14 +142,14 @@ def move_fwd_until_wall(angle, dist):
                     move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
                     break
                 else:
-                    avoid_obstacle("left",0.25, LEFT_MOTOR, RIGHT_MOTOR)
+                    avoid_obstacle("left",0.25, angle)
             if (obstacleDetectedRight.is_set()):
                 print("OBSTACLE RIGHT")
                 if (US_SENSOR.get_value() < 25):  # not enough space to go around
                     move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
                     break
                 else:
-                    avoid_obstacle("right",0.25, LEFT_MOTOR, RIGHT_MOTOR)
+                    avoid_obstacle("right",0.25, angle)
             if (poopDetectedLeft.is_set()):
                 print("POOP LEFT")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
@@ -297,7 +291,7 @@ if __name__ == "__main__":
          colorSensorThread.start()
          colorSensorThread.join()
          navigationThread.join()
-        #avoid_obstacle("left", LEFT_MOTOR, RIGHT_MOTOR)
+        #avoid_obstacle("left")
          #Eback_to_start()
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
