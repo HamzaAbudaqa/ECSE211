@@ -60,12 +60,11 @@ def Eback_to_start():
         move_fwd_until_wall(-90, MIN_DIST_FROM_WALL)
 
 
-def avoid_obstacle(direction: str, amplitude :int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+def avoid_obstacle(direction: str, amplitude :float, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     """
     Method to avoid an obstacle (colored cube) following a predertermined path,
     and the return to its start position
     """
-    time.sleep(0.5)
     # move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
     smallMovement = 0.05
     bigMovement = 0.1
@@ -75,19 +74,19 @@ def avoid_obstacle(direction: str, amplitude :int, LEFT_MOTOR: Motor, RIGHT_MOTO
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall > 10):
-            dodge_right(LEFT_MOTOR,RIGHT_MOTOR,0.25, smallMovement)
+            dodge_right(LEFT_MOTOR,RIGHT_MOTOR,amplitude, smallMovement)
         else :
             rotate(-180, LEFT_MOTOR, RIGHT_MOTOR)
-            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, 0.25, bigMovement)
+            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, amplitude, bigMovement)
     else:
         rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall>10) :
-            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, 0.25, smallMovement)
+            dodge_left(LEFT_MOTOR, RIGHT_MOTOR, amplitude, smallMovement)
         else :
             rotate(180, LEFT_MOTOR, RIGHT_MOTOR)
-            dodge_right(LEFT_MOTOR, RIGHT_MOTOR, 0.25, bigMovement)
+            dodge_right(LEFT_MOTOR, RIGHT_MOTOR, amplitude, bigMovement)
 
 
 
@@ -173,13 +172,13 @@ def move_fwd_until_wall(angle, dist):
                 #if (US_SENSOR.get_value() < 15):  # not enough space to go around
                 #    break
                 #else:
-                avoid_obstacle("left",0, LEFT_MOTOR, RIGHT_MOTOR)
+                avoid_obstacle("left",0.25, LEFT_MOTOR, RIGHT_MOTOR)
             if (obstacleDetectedRight.is_set()):
                 print("object detected right")
                 #if (US_SENSOR.get_value() < 15):  # not enough space to go around
                 #    break
                 #else:
-                avoid_obstacle("right",0, LEFT_MOTOR, RIGHT_MOTOR)
+                avoid_obstacle("right",0.25, LEFT_MOTOR, RIGHT_MOTOR)
             if (poopDetectedLeft.is_set()):
 #                 stop(LEFT_MOTOR, RIGHT_MOTOR)
                 print("poop detected left")
@@ -204,10 +203,10 @@ def do_s_shape():
 
     if (going_left):
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR,avoidance_offset)  # going to angle -180 on gyro
+        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR,0)  # going to angle -180 on gyro
     else:
         move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR,avoidance_offset)  # going to angle 0 on gyro
+        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR,0)  # going to angle 0 on gyro
     avoidance_offset = 0
     going_left = not going_left
 
@@ -299,7 +298,7 @@ def avoid_lake(angleOfRotation, distanceChange):
     Will go around a lake from the right
     '''
     print("avoiding lake with rotation:" + str(angleOfRotation))
-    time.sleep(0.10)
+    time.sleep(0.05)
     move_bwd(distanceChange*0.8,LEFT_MOTOR,RIGHT_MOTOR)
     rotate(angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
     currDistance = US_SENSOR.get_value()

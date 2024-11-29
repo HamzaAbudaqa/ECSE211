@@ -26,7 +26,7 @@ DUMP_WAIT_TIME = 3
 
 
 
-def grab_and_release(LEFT_MOTO: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
+def grab_and_release(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     ''' Function to grab a block lift it & release it into storage unit '''
 
     try:
