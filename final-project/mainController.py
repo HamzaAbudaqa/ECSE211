@@ -130,11 +130,11 @@ def dodge_left(length : int, width : int, curr_straight: int):
 
 
 def turn_until_no_lake(direction: str):
-    while (lakeDetectedRight.is_Set() or lakeDetectedLeft.is_Set()):
-        rotate(20, LEFT_MOTOR, RIGHT_MOTOR)
+    while (lakeDetectedRight.isSet() or lakeDetectedLeft.isSet()):
+        rotate(35, LEFT_MOTOR, RIGHT_MOTOR)
         lakeDetectedLeft.clear()
         lakeDetectedRight.clear()
-    move_bwd(0.02, LEFT_MOTOR, RIGHT_MOTOR)
+    #move_bwd(0.02, LEFT_MOTOR, RIGHT_MOTOR)
 
 
 def move_fwd_until_wall(angle, dist):
