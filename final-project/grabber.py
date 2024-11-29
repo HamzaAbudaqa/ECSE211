@@ -1,11 +1,11 @@
 from utils.brick import *
 from time import sleep
-# from navigation2 import move_bwd, move_fwd
+from navigation2 import move_bwd, move_fwd
 
-RIGHT_MOTOR = Motor('A')
-LEFT_MOTOR = Motor('D')
-CLAW_MOTOR = Motor('B')
-LIFT_MOTOR = Motor('C')
+# RIGHT_MOTOR = Motor('A')
+# LEFT_MOTOR = Motor('D')
+# CLAW_MOTOR = Motor('B')
+# LIFT_MOTOR = Motor('C')
 
 
 GRAB_POSITION = 300
@@ -26,7 +26,7 @@ DUMP_WAIT_TIME = 3
 
 
 
-def grab_and_release(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
+def grab_and_release(LEFT_MOTO: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     ''' Function to grab a block lift it & release it into storage unit '''
 
     try:
@@ -117,22 +117,22 @@ def dump_storage(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
 def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     move_bwd(0.14, LEFT_MOTOR, RIGHT_MOTOR)
     sleep(2)
-    grab_and_release(CLAW_MOTOR, LIFT_MOTOR)
+    grab_and_release(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
 
 
-if __name__ == "__main__":
-    try:
-        LIFT_MOTOR.reset_encoder()
-        CLAW_MOTOR.reset_encoder()
-        RIGHT_MOTOR.reset_encoder()
-        LEFT_MOTOR.reset_encoder()
+# if __name__ == "__main__":
+#     try:
+#         LIFT_MOTOR.reset_encoder()
+#         CLAW_MOTOR.reset_encoder()
+#         RIGHT_MOTOR.reset_encoder()
+#         LEFT_MOTOR.reset_encoder()
         
-#         detect_and_grab(RIGHT_MOTOR, LEFT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-        dump_storage(CLAW_MOTOR, LIFT_MOTOR)
-    except BaseException as e:
-        print(e)
-    finally:
-        reset_brick()
+# #         detect_and_grab(RIGHT_MOTOR, LEFT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+#         dump_storage(CLAW_MOTOR, LIFT_MOTOR)
+#     except BaseException as e:
+#         print(e)
+#     finally:
+#         reset_brick()
 
 
 

@@ -249,9 +249,9 @@ def recognizeObstacles():
             rgbL = getAveragedValues(15, CS_L)
             rgbR = getAveragedValues(15, CS_R)  # Get color data
 
+            # map color data to a known sample of colors
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
-            colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1],
-                                                    rgbR[2])  # map color data to a known sample of colors
+            colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1], rgbR[2])
 
             if colorDetectedLeft in poop:
                 poopDetectedLeft.set()

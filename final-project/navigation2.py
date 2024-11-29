@@ -18,7 +18,7 @@ SPEED_LIMIT = 720
 
 ROBOT_LEN = 0.15  # m
 MAP_SIZE = 120  # cm
-NB_S = int((MAP_SIZE / (ROBOT_LEN*100)) / 2)  # number of back and forth s motions to cover the entire board
+NB_S = int(MAP_SIZE / (ROBOT_LEN*100))  # number of back and forth s motions to cover the entire board
 FWD_SPEED = 250
 TRN_SPEED = 320
 
