@@ -110,7 +110,7 @@ def turn_until_no_lake(direction: str):
     # if both sensors detect lake, make a bigger turn to ensure
     # the robot doesn't get stuck in infinite corrections
     if direction == "both":
-        rotate(60, LEFT_MOTOR, RIGHT_MOTOR)
+        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
         lakeDetectedLeft.clear()
         lakeDetectedRight.clear()
         return
@@ -134,6 +134,7 @@ def rotate_at_wall(dir: str):
     - dir = "left" : left rotate (go from 0 to -180 deg on gyro)
     """
     try:
+        global going_left
         # go to -90 deg on gyro
         rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
         if (US_SENSOR.get_value() <= MIN_DIST_FROM_WALL):
@@ -143,8 +144,9 @@ def rotate_at_wall(dir: str):
                 move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
             rotate(-270 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
             move_fwd_until_wall(-270, MIN_DIST_FROM_WALL)
-            rotate(-360 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
-            GYRO.reset_measure()
+            rotate(0 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+            #print(str(GYRO.reset_measure()))
+            going_left = True
             return
         
         LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
@@ -156,8 +158,9 @@ def rotate_at_wall(dir: str):
             rotate(- GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
         else:
             # go to -180 deg on gyro
-            print("rotating left 2 ")
             rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+        
+        going_left = not going_left
     except IOError as error:
         print(error)
 
@@ -180,7 +183,7 @@ def move_fwd_until_wall(angle, dist):
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         #print("curr distance to wall is : " + str(US_SENSOR.get_value()))
         print("distance to stop at is : " + str(dist))
-        #print("angle to follow is :" + str(angle))
+        print("angle to follow is :" + str(angle))
         #print("absolute angle is :" + str(GYRO.get_abs_measure()))
 
 
@@ -242,7 +245,6 @@ def move_fwd_until_wall(angle, dist):
 
 def do_s_shape():
 
-    global going_left
     global avoidance_offset
 
     if (going_left):
@@ -252,7 +254,6 @@ def do_s_shape():
         move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)  # go straight
         rotate_at_wall("right")  # going to angle 0 on gyro
     avoidance_offset = 0
-    going_left = not going_left
 
 
 def navigation_program():
