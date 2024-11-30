@@ -5,7 +5,8 @@ from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, 
 from navigation2 import *
 import time
 
-is_going_home = False
+start_time= None
+gyro_readings=[]is_going_home = False
 count = 0
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
@@ -69,6 +70,36 @@ def Eback_to_start():
     dump_storage(CLAW_MOTOR,LIFT_MOTOR)
     print("Dumping now")
     move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
+
+def check_for_wall():
+    global start_time
+    global gyro_readings
+
+    GYRO_THRESHOLD = 2
+    TIME_LIMIT = 5
+    
+    current_angle = GYRO.get_value()
+    print(f"Current Angle: {current_angle}")
+    gyro_readings.append(current_angle)
+    
+    if len(gyro_readings) > 10:
+        gyro_readings.pop(0)  
+    if len(gyro_readings) > 1:
+        gyro_variation = max(gyro_readings) - min(gyro_readings)
+    else:
+        gyro_variation = 0
+    distance_from_wall = US_SENSOR.get_value()
+    if (gyro_variation<GYRO_THRESHOLD and distance_from_wall < MIN_DIST_FROM_WALL):
+        if start_time == None:
+            start_time = time.time()
+        
+        if time.time() - start_time > TIME_LIMIT:
+            print("Detected prolonged stuck condition")
+            move_bwd(0.5, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate(current_angle + 90,LEFT_MOTOR, RIGHT_MOTOR)
+            start_time = None
+        else:
+            start_time = None
 
 
 def turn_until_no_lake(direction: str):
