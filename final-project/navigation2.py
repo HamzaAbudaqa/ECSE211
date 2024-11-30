@@ -1,7 +1,6 @@
-from utils.brick import EV3GyroSensor, Motor
+from utils.brick import EV3GyroSensor, Motor, EV3UltrasonicSensor
 import time, math
 from colorSensorUtils import *
-from grabber import *
 
 
 MOTOR_POLL_DELAY = 0.2
@@ -28,7 +27,7 @@ DELTA_SPEED = 70  # dps
 
 # put value small enough so that if it's following the wall
 # the distance measured from the side won't have an impact
-MIN_DIST_FROM_WALL = 10  # cm
+MIN_DIST_FROM_WALL = 7  # cm
 
 
 def wait_for_motor(motor: Motor):

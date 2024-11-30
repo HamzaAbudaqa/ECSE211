@@ -1,6 +1,8 @@
-import threading, timer
+import threading, time
 from navigation2 import *
-import time
+from grabber import *
+from utils.brick import EV3ColorSensor, EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors
+from colorSensorUtils import getAveragedValues, returnClosestValue
 
 start_time = time.time()
 
@@ -79,7 +81,7 @@ def check_for_wall():
     TIME_LIMIT = 5
     
     current_angle = GYRO.get_value()
-    print(f"Current Angle: {current_angle}")
+    #print(f"Current Angle: {current_angle}")
     gyro_readings.append(current_angle)
     
     if len(gyro_readings) > 10:
@@ -225,13 +227,13 @@ def move_fwd_until_wall(angle, dist):
                     
                     detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                     count += 1
-            
+            check_for_wall()
             # correct trajectory
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
             # initialize go back to start sequence
-            if (((count >= 6 ) or (time.time() - start_time > 135)) and not is_going_home):
+            if ((count >= 6 ) or (time.time() - start_time > 135)):
                 is_going_home = True
                 Eback_to_start()
                 break
