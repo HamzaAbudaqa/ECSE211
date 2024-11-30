@@ -10,7 +10,7 @@ start_time = time.time()
 start_time2= None
 gyro_readings=[]
 is_going_home = False
-count = 0
+count = 3
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
@@ -116,7 +116,8 @@ def turn_until_no_lake(direction: str):
         return
 
     if direction == "left":
-        i = 1
+        #i = 1
+        i = -1
     else:
         i = -1
     while (lakeDetectedRight.is_set() or lakeDetectedLeft.is_set()):
@@ -137,6 +138,7 @@ def rotate_at_wall(dir: str):
         global going_left
         # go to -90 deg on gyro
         rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+
         if (US_SENSOR.get_value() <= MIN_DIST_FROM_WALL):
             if (going_left):
                 # go to right wall
@@ -148,7 +150,7 @@ def rotate_at_wall(dir: str):
             #print(str(GYRO.reset_measure()))
             going_left = True
             return
-        
+
         LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
         RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
         wait_for_motor(RIGHT_MOTOR)
@@ -232,7 +234,7 @@ def move_fwd_until_wall(angle, dist):
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
             # initialize go back to start sequence
-            if (((count >= 6 ) and not is_going_home) or (time.time() - start_time > 135)):
+            if (((count >= 6 ) or (time.time() - start_time > 135)) and not is_going_home):
                 is_going_home = True
                 Eback_to_start()
                 break
@@ -260,7 +262,7 @@ def navigation_program():
     "Do an entire sweep of the board while doing 'S' motions"
     try:
         print("Starting board sweeping started")
-        for i in range(NB_S):
+        while True:
             do_s_shape()
     except KeyboardInterrupt:
         print("Navigation program terminated")
