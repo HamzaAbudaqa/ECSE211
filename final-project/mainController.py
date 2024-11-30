@@ -5,7 +5,7 @@ from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, 
 from navigation2 import *
 import time
 
-count = 0
+count = 5
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
@@ -46,24 +46,28 @@ def init_motors():
 
 def Eback_to_start():
     global going_left
-    while (not (poopDetectedLeft.is_set() or poopDetectedRight.is_set())):
-        if going_left == False:
-            angleRot = 1  # after testing we will determine the magnitude
-            move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-            rotate(90*angleRot,LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd_until_wall(90*angleRot, MIN_DIST_FROM_WALL)
-            going_left = not going_left
-            rotate(90*angleRot, LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd_until_wall(180*angleRot, MIN_DIST_FROM_WALL)
-
-
-        else:
-            move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
-            rotate(-90,LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd_until_wall(-90, MIN_DIST_FROM_WALL)
+    
+    #if going_left:
+    #    start_angle = 0
+    #else:
+    #    start_angle = -180
+    start_angle = US_SENSOR.get_value()
+    while (not (poopDetectedLeft.is_set() and poopDetectedRight.is_set())):
+        move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
+        rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
+        start_angle += 90
+        move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
+        rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
+        start_angle += 90
+        #going_left = not going_left
+        time.sleep(0.1)
+            
+ 
     rotate(180,LEFT_MOTOR, RIGHT_MOTOR)
-    dump_storage()
-    move_bwd(5, LEFT_MOTOR, RIGHT_MOTOR)
+    print("Found yellow")
+    dump_storage(CLAW_MOTOR,LIFT_MOTOR)
+    print("Dumping now")
+    move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
 
 
 def avoid_obstacle(direction: str, amplitude :float, curr_straight: int):
@@ -88,7 +92,7 @@ def avoid_obstacle(direction: str, amplitude :float, curr_straight: int):
         rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
-        if (distanceFromWall>10) :
+        if (distanceFromWall>10) : 
             dodge_left(amplitude, smallMovement, curr_straight)
         else :
             rotate(180, LEFT_MOTOR, RIGHT_MOTOR)
@@ -137,7 +141,7 @@ def dodge_left(length : int, width : int, curr_straight: int):
 
 
 def turn_until_no_lake(direction: str):
-    while (lakeDetectedRight.is_Set() or lakeDetectedLeft.is_Set()):
+    while (lakeDetectedRight.is_set() or lakeDetectedLeft.is_Set()):
         rotate(20, LEFT_MOTOR, RIGHT_MOTOR)
         lakeDetectedLeft.clear()
         lakeDetectedRight.clear()
@@ -201,6 +205,7 @@ def move_fwd_until_wall(angle, dist):
             
             if count >= 6 or time.time() > 135:
                 Eback_to_start()
+                break
                
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
@@ -209,7 +214,8 @@ def move_fwd_until_wall(angle, dist):
 
 
 
-# Show the results : this can be altered however you like
+
+
 def do_s_shape():
     global going_left
     global avoidance_offset
