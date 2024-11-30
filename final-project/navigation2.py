@@ -151,15 +151,15 @@ def avoid_obstacle(direction: str, LEFT_MOTOR:Motor,RIGHT_MOTOR : Motor, US_SENS
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall > 10):
-            rotate(-45, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate(-65, LEFT_MOTOR, RIGHT_MOTOR)
         else:
-            rotate(-100, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate(-120, LEFT_MOTOR, RIGHT_MOTOR)
     else:
         rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall > 10):
-            rotate(45, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate(65, LEFT_MOTOR, RIGHT_MOTOR)
         else:
-            rotate(100, LEFT_MOTOR, RIGHT_MOTOR)
+            rotate(120, LEFT_MOTOR, RIGHT_MOTOR)
 
