@@ -128,6 +128,44 @@ def turn_until_no_lake(direction: str):
     move_bwd(0.02, LEFT_MOTOR, RIGHT_MOTOR)
 
 
+def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    """
+    Rotates the robot in the given direction and positions itself in
+    the next row to sweep
+    - dir = "right" : right rotate (go from -180 to 0 deg on gyro)
+    - dir = "left" : left rotate (go from 0 to -180 deg on gyro)
+    """
+    try:
+        # go to -90 deg on gyro
+        rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+
+        dist_to_wall = US_SENSOR.get_value()
+        if (dist_to_wall <= MIN_DIST_FROM_WALL):
+            if (going_left):
+                # go to right wall
+                rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+                move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
+            rotate(-270 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+            move_fwd_until_wall(-270, MIN_DIST_FROM_WALL)
+            rotate(-360 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+            GYRO.reset_measure()
+            return
+        
+        LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
+        RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
+        wait_for_motor(RIGHT_MOTOR)
+
+        if (dir == "right"):
+            # go to 0 deg on gyro
+            rotate(- GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+        else:
+            # go to -180 deg on gyro
+            print("rotating left 2 ")
+            rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+    except IOError as error:
+        print(error)
+
+
 def move_fwd_until_wall(angle, dist):
     """
     Makes the robot go in a straight line at the given angle (absolute angle
