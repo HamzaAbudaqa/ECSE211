@@ -56,7 +56,7 @@ def Eback_to_start():
         start_angle = 0
     else:
         start_angle = -180
-    while (dumpsterDetected.is_set()):
+    while not dumpsterDetected.is_set():
         move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
         rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
         start_angle += 90
