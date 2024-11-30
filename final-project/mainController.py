@@ -128,7 +128,7 @@ def turn_until_no_lake(direction: str):
     move_bwd(0.02, LEFT_MOTOR, RIGHT_MOTOR)
 
 
-def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+def rotate_at_wall(dir: str):
     """
     Rotates the robot in the given direction and positions itself in
     the next row to sweep
@@ -138,9 +138,7 @@ def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR
     try:
         # go to -90 deg on gyro
         rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
-
-        dist_to_wall = US_SENSOR.get_value()
-        if (dist_to_wall <= MIN_DIST_FROM_WALL):
+        if (US_SENSOR.get_value() <= MIN_DIST_FROM_WALL):
             if (going_left):
                 # go to right wall
                 rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
@@ -183,7 +181,7 @@ def move_fwd_until_wall(angle, dist):
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         #print("curr distance to wall is : " + str(US_SENSOR.get_value()))
-        #print("distance to stop at is : " + str(dist))
+        print("distance to stop at is : " + str(dist))
         #print("angle to follow is :" + str(angle))
         #print("absolute angle is :" + str(GYRO.get_abs_measure()))
 
@@ -251,10 +249,10 @@ def do_s_shape():
 
     if (going_left):
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("left", GYRO, LEFT_MOTOR, RIGHT_MOTOR,0)  # going to angle -180 on gyro
+        rotate_at_wall("left")  # going to angle -180 on gyro
     else:
         move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("right", GYRO, LEFT_MOTOR, RIGHT_MOTOR,0)  # going to angle 0 on gyro
+        rotate_at_wall("right")  # going to angle 0 on gyro
     avoidance_offset = 0
     going_left = not going_left
 
