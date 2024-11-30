@@ -7,9 +7,7 @@ import time
 
 start_time = time.time()
 
-start_time = time.time()
-
-start_time= None
+start_time2= None
 gyro_readings=[]
 is_going_home = False
 count = 0
@@ -77,7 +75,7 @@ def Eback_to_start():
     move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
 
 def check_for_wall():
-    global start_time
+    global start_time2
     global gyro_readings
 
     GYRO_THRESHOLD = 2
@@ -95,16 +93,16 @@ def check_for_wall():
         gyro_variation = 0
     distance_from_wall = US_SENSOR.get_value()
     if (gyro_variation<GYRO_THRESHOLD and distance_from_wall < MIN_DIST_FROM_WALL):
-        if start_time == None:
-            start_time = time.time()
+        if start_time2 == None:
+            start_time2 = time.time()
         
-        if time.time() - start_time > TIME_LIMIT:
+        if time.time() - start_time2 > TIME_LIMIT:
             print("Detected prolonged stuck condition")
             move_bwd(0.5, LEFT_MOTOR, RIGHT_MOTOR)
             rotate(current_angle + 90,LEFT_MOTOR, RIGHT_MOTOR)
-            start_time = None
+            start_time2 = None
         else:
-            start_time = None
+            start_time2 = None
 
 
 def turn_until_no_lake(direction: str):
@@ -187,51 +185,51 @@ def move_fwd_until_wall(angle, dist):
 
 
         while (US_SENSOR.get_value() > dist):
-            
-            # lake avoidance
-            if (lakeDetectedLeft.is_set() and lakeDetectedRight.is_set()):
-                print("LAKE LEFT AND RIGHT")
-                turn_until_no_lake("both")
-            elif (lakeDetectedLeft.is_set()):
-                print("LAKE LEFT")
-                turn_until_no_lake("left")
-            elif (lakeDetectedRight.is_set()):
-                print("LAKE RIGHT")
-                turn_until_no_lake("right")
-            
-            # obstacle avoidance
-            if (obstacleDetectedLeft.is_set()):
-                print("OBSTACLE LEFT")
-                if (US_SENSOR.get_value() < 25):  # not enough space to go around
-                    move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
-                    break
-                else:
-                    avoid_obstacle("left",LEFT_MOTOR, RIGHT_MOTOR, US_SENSOR)
-            if (obstacleDetectedRight.is_set()):
-                print("OBSTACLE RIGHT")
-                if (US_SENSOR.get_value() < 25):  # not enough space to go around
-                    move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
-                    break
-                else:
-                    avoid_obstacle("right",LEFT_MOTOR, RIGHT_MOTOR, US_SENSOR)
-            
-            # poop pickup
-            if (poopDetectedLeft.is_set()):
-                print("POOP LEFT")
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-                count += 1
-            if (poopDetectedRight.is_set()):
-                print("POOP RIGHT")
+            if not is_going_home :
+                # lake avoidance
+                if (lakeDetectedLeft.is_set() and lakeDetectedRight.is_set()):
+                    print("LAKE LEFT AND RIGHT")
+                    turn_until_no_lake("both")
+                elif (lakeDetectedLeft.is_set()):
+                    print("LAKE LEFT")
+                    turn_until_no_lake("left")
+                elif (lakeDetectedRight.is_set()):
+                    print("LAKE RIGHT")
+                    turn_until_no_lake("right")
                 
-                detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-                count += 1
+                # obstacle avoidance
+                if (obstacleDetectedLeft.is_set()):
+                    print("OBSTACLE LEFT")
+                    if (US_SENSOR.get_value() < 25):  # not enough space to go around
+                        move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
+                        break
+                    else:
+                        avoid_obstacle("left",LEFT_MOTOR, RIGHT_MOTOR, US_SENSOR)
+                if (obstacleDetectedRight.is_set()):
+                    print("OBSTACLE RIGHT")
+                    if (US_SENSOR.get_value() < 25):  # not enough space to go around
+                        move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
+                        break
+                    else:
+                        avoid_obstacle("right",LEFT_MOTOR, RIGHT_MOTOR, US_SENSOR)
+                
+                # poop pickup
+                if (poopDetectedLeft.is_set()):
+                    print("POOP LEFT")
+                    detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+                    count += 1
+                if (poopDetectedRight.is_set()):
+                    print("POOP RIGHT")
+                    
+                    detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+                    count += 1
             
             # correct trajectory
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
             # initialize go back to start sequence
-            if (((count >= 6 ) and not is_going_home) or time.time() - start_time > 135):
+            if (((count >= 6 ) and not is_going_home) or (time.time() - start_time > 135)):
                 is_going_home = True
                 Eback_to_start()
                 break
