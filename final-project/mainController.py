@@ -108,6 +108,15 @@ def check_for_wall():
 
 
 def turn_until_no_lake(direction: str):
+
+    # if both sensors detect lake, make a bigger turn to ensure
+    # the robot doesn't get stuck in infinite corrections
+    if direction == "both":
+        rotate(60, LEFT_MOTOR, RIGHT_MOTOR)
+        lakeDetectedLeft.clear()
+        lakeDetectedRight.clear()
+        return
+
     if direction == "left":
         i = 1
     else:
@@ -117,6 +126,44 @@ def turn_until_no_lake(direction: str):
         lakeDetectedLeft.clear()
         lakeDetectedRight.clear()
     move_bwd(0.02, LEFT_MOTOR, RIGHT_MOTOR)
+
+
+def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
+    """
+    Rotates the robot in the given direction and positions itself in
+    the next row to sweep
+    - dir = "right" : right rotate (go from -180 to 0 deg on gyro)
+    - dir = "left" : left rotate (go from 0 to -180 deg on gyro)
+    """
+    try:
+        # go to -90 deg on gyro
+        rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+
+        dist_to_wall = US_SENSOR.get_value()
+        if (dist_to_wall <= MIN_DIST_FROM_WALL):
+            if (going_left):
+                # go to right wall
+                rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+                move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
+            rotate(-270 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+            move_fwd_until_wall(-270, MIN_DIST_FROM_WALL)
+            rotate(-360 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+            GYRO.reset_measure()
+            return
+        
+        LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
+        RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
+        wait_for_motor(RIGHT_MOTOR)
+
+        if (dir == "right"):
+            # go to 0 deg on gyro
+            rotate(- GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+        else:
+            # go to -180 deg on gyro
+            print("rotating left 2 ")
+            rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
+    except IOError as error:
+        print(error)
 
 
 def move_fwd_until_wall(angle, dist):
@@ -142,16 +189,19 @@ def move_fwd_until_wall(angle, dist):
 
 
         while (US_SENSOR.get_value() > dist):
-            if (lakeDetectedLeft.is_set()):
+            
+            # lake avoidance
+            if (lakeDetectedLeft.is_set() and lakeDetectedRight.is_set()):
+                print("LAKE LEFT AND RIGHT")
+                turn_until_no_lake("both")
+            elif (lakeDetectedLeft.is_set()):
                 print("LAKE LEFT")
-                # avoidance_offset += 0.1
-                # avoid_lake(90,0.1)
                 turn_until_no_lake("left")
-            if (lakeDetectedRight.is_set()):
+            elif (lakeDetectedRight.is_set()):
                 print("LAKE RIGHT")
-                # avoidance_offset += 0.1
-                # avoid_lake(-90,0.1)
                 turn_until_no_lake("right")
+            
+            # obstacle avoidance
             if (obstacleDetectedLeft.is_set()):
                 print("OBSTACLE LEFT")
                 if (US_SENSOR.get_value() < 25):  # not enough space to go around
@@ -166,6 +216,8 @@ def move_fwd_until_wall(angle, dist):
                     break
                 else:
                     avoid_obstacle("right",LEFT_MOTOR, RIGHT_MOTOR, US_SENSOR)
+            
+            # poop pickup
             if (poopDetectedLeft.is_set()):
                 print("POOP LEFT")
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
@@ -175,9 +227,12 @@ def move_fwd_until_wall(angle, dist):
                 
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                 count += 1
+            
+            # correct trajectory
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
+            # initialize go back to start sequence
             if (((count >= 6 ) and not is_going_home) or time.time() - start_time > 135):
                 is_going_home = True
                 Eback_to_start()
@@ -187,9 +242,6 @@ def move_fwd_until_wall(angle, dist):
         print(e)
         reset_brick()
         exit()
-
-
-
 
 
 def do_s_shape():
@@ -288,23 +340,6 @@ def recognizeObstacles():
         print(e)
     finally:
         exit()
-
-def avoid_lake(angleOfRotation, distanceChange):
-    '''
-    Will go around a lake from the right
-    '''
-    originalAngle = GYRO.get_abs_measure()
-    print("avoiding lake with rotation:" + str(angleOfRotation))
-    time.sleep(0.1)
-    move_bwd(distanceChange*0.8,LEFT_MOTOR,RIGHT_MOTOR)
-    rotate(angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
-    currDistance = US_SENSOR.get_value()
-    curr_angle = GYRO.get_abs_measure()
-    newDistance = max(currDistance-distanceChange*100,7)
-    time.sleep(0.10)
-    move_fwd_until_wall(curr_angle,newDistance)
-    rotate(-angleOfRotation, LEFT_MOTOR, RIGHT_MOTOR)
-    print("done avoiding lake")
 
 
 if __name__ == "__main__":

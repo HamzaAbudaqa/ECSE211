@@ -56,38 +56,6 @@ def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         print(error)
 
 
-def rotate_at_wall(dir: str, GYRO: EV3GyroSensor, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor,offset : int):
-    """
-    Rotates the robot in the given direction and positions itself in
-    the next row to sweep
-    - dir = "right" : right rotate (go from -180 to 0 deg on gyro)
-    - dir = "left" : left rotate (go from 0 to -180 deg on gyro)
-    """
-    try:
-        # go to -90 deg on gyro
-        rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
-        if offset > 0 : #robot has gone left too much, needs to go right
-            move_fwd(abs(offset), LEFT_MOTOR, RIGHT_MOTOR)
-        elif offset < 0:
-            rotate(GYRO.get_abs_measure()-180, LEFT_MOTOR, RIGHT_MOTOR)
-            move_fwd(abs(offset), LEFT_MOTOR, RIGHT_MOTOR)
-            rotate(GYRO.get_abs_measure() + 180, LEFT_MOTOR, RIGHT_MOTOR)
-
-        LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
-        RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
-        wait_for_motor(RIGHT_MOTOR)
-
-        if (dir == "right"):
-            # go to 0 deg on gyro
-            rotate(- GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
-        else:
-            # go to -180 deg on gyro
-            print("rotating left 2 ")
-            rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
-    except IOError as error:
-        print(error)
-
-
 def move_fwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     "Move the robot foward without turning for the given distance"
     try:
