@@ -1,7 +1,4 @@
-import threading, time
-from colorSensorUtils import getAveragedValues, returnClosestValue
-from grabber import *
-from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, wait_ready_sensors, EV3ColorSensor
+import threading, timer
 from navigation2 import *
 import time
 
@@ -57,7 +54,7 @@ def Eback_to_start():
         start_angle = 0
     else:
         start_angle = -180
-    while (not (poopDetectedLeft.is_set() and poopDetectedRight.is_set())):
+    while (dumpsterDetected.is_set()):
         move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
         rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
         start_angle += 90
@@ -283,8 +280,7 @@ poopDetectedLeft = threading.Event()
 poopDetectedRight = threading.Event()
 obstacleDetectedLeft = threading.Event()
 obstacleDetectedRight = threading.Event()
-runColorSensorThread = threading.Event()
-runColorSensorThread.set()
+dumpsterDetected = threading.Event()
 
 
 def recognizeObstacles():
@@ -332,6 +328,12 @@ def recognizeObstacles():
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
                 poopDetectedRight.clear()
+
+            if colorDetectedLeft == "yellowFloor" or colorDetectedRight == "yellowFloor": #
+                lakeDetectedRight.clear()
+                obstacleDetectedRight.clear()
+                poopDetectedRight.clear()
+                dumpsterDetected.set()
 
             # sleep(0.25) in case a sleep is necessary to sync information between sensors
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
