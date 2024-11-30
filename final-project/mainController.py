@@ -5,6 +5,10 @@ from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, 
 from navigation2 import *
 import time
 
+start_time = time.time()
+
+start_time = time.time()
+
 start_time= None
 gyro_readings=[]
 is_going_home = False
@@ -62,7 +66,7 @@ def Eback_to_start():
         move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
         rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
         start_angle += 90
-        #going_left = not going_left
+        going_left = not going_left
         time.sleep(0.1)
 
 
@@ -131,6 +135,7 @@ def move_fwd_until_wall(angle, dist):
 
     The robot stops once it finds itself at distance dist from the wall
     """
+
     try:
         global avoiding_lake
         global avoidance_offset
@@ -187,9 +192,9 @@ def move_fwd_until_wall(angle, dist):
             # correct trajectory
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
-
+            
             # initialize go back to start sequence
-            if (count >= 6 ) and not is_going_home:
+            if (((count >= 6 ) and not is_going_home) or time.time() - start_time > 135):
                 is_going_home = True
                 Eback_to_start()
                 break
