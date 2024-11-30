@@ -5,7 +5,8 @@ from utils.brick import EV3GyroSensor, EV3UltrasonicSensor, Motor, reset_brick, 
 from navigation2 import *
 import time
 
-count = 5
+is_going_home = False
+count = 0
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
@@ -45,13 +46,13 @@ def init_motors():
 
 
 def Eback_to_start():
+    print("GOING BACK HOME")
     global going_left
     
-    #if going_left:
-    #    start_angle = 0
-    #else:
-    #    start_angle = -180
-    start_angle = US_SENSOR.get_value()
+    if going_left:
+        start_angle = 0
+    else:
+        start_angle = -180
     while (not (poopDetectedLeft.is_set() and poopDetectedRight.is_set())):
         move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
         rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
@@ -121,7 +122,7 @@ def dodge_right(length : int, width : int, curr_straight: int):
 
 def dodge_left(length : int, width : int, curr_straight: int):
     global avoidance_offset
-
+    
     distanceFromWall = US_SENSOR.get_value()
     time.sleep(0.1)
     move_fwd_until_wall(curr_straight, distanceFromWall - width * 100)
@@ -141,8 +142,12 @@ def dodge_left(length : int, width : int, curr_straight: int):
 
 
 def turn_until_no_lake(direction: str):
-    while (lakeDetectedRight.is_set() or lakeDetectedLeft.is_Set()):
-        rotate(20, LEFT_MOTOR, RIGHT_MOTOR)
+    if direction == "left":
+        i = 1
+    else:
+        i = -1
+    while (lakeDetectedRight.is_set() or lakeDetectedLeft.is_set()):
+        rotate(20*i, LEFT_MOTOR, RIGHT_MOTOR)
         lakeDetectedLeft.clear()
         lakeDetectedRight.clear()
     move_bwd(0.02, LEFT_MOTOR, RIGHT_MOTOR)
@@ -158,13 +163,15 @@ def move_fwd_until_wall(angle, dist):
     try:
         global avoiding_lake
         global avoidance_offset
-        global count 
+        global count
+        global is_going_home
+
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
-        print("curr distance to wall is : " + str(US_SENSOR.get_value()))
-        print("distance to stop at is : " + str(dist))
-        print("angle to follow is :" + str(angle))
-        print("absolute angle is :" + str(GYRO.get_abs_measure()))
+        #print("curr distance to wall is : " + str(US_SENSOR.get_value()))
+        #print("distance to stop at is : " + str(dist))
+        #print("angle to follow is :" + str(angle))
+        #print("absolute angle is :" + str(GYRO.get_abs_measure()))
         
 
         while (US_SENSOR.get_value() > dist):
@@ -203,7 +210,8 @@ def move_fwd_until_wall(angle, dist):
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
-            if count >= 6 or time.time() > 135:
+            if (count >= 6 ) and not is_going_home:
+                is_going_home = True
                 Eback_to_start()
                 break
                
@@ -217,6 +225,7 @@ def move_fwd_until_wall(angle, dist):
 
 
 def do_s_shape():
+    
     global going_left
     global avoidance_offset
 
