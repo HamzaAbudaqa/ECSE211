@@ -6,7 +6,8 @@ from navigation2 import *
 import time
 
 start_time= None
-gyro_readings=[]is_going_home = False
+gyro_readings=[]
+is_going_home = False
 count = 0
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
