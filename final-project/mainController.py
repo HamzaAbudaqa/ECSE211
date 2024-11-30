@@ -172,6 +172,7 @@ def move_fwd_until_wall(angle, dist):
                 count += 1
             if (poopDetectedRight.is_set()):
                 print("POOP RIGHT")
+                
                 detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                 count += 1
             time.sleep(0.1)
