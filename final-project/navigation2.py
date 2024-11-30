@@ -45,7 +45,6 @@ def rotate(angle, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     - angle < 0: rotate left
     """
     try:
-        print("rotating by setting motors to :" + str(angle))
         LEFT_MOTOR.set_dps(TRN_SPEED)
         RIGHT_MOTOR.set_dps(TRN_SPEED)
         LEFT_MOTOR.set_position_relative(int(angle * ORIENT_TO_DEG))

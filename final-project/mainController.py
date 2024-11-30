@@ -73,6 +73,8 @@ def Eback_to_start():
     print("Dumping now")
     move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
 
+    exit()
+
 def check_for_wall():
     global start_time2
     global gyro_readings
@@ -115,8 +117,7 @@ def turn_until_no_lake(direction: str):
         return
 
     if direction == "left":
-        #i = 1
-        i = -1
+        i = 1
     else:
         i = -1
     while (lakeDetectedRight.is_set() or lakeDetectedLeft.is_set()):
@@ -233,7 +234,7 @@ def move_fwd_until_wall(angle, dist):
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
             # initialize go back to start sequence
-            if ((count >= 6 ) or (time.time() - start_time > 135)):
+            if (((count >= 6 ) or (time.time() - start_time > 135)) and not is_going_home):
                 is_going_home = True
                 Eback_to_start()
                 break
@@ -301,41 +302,50 @@ def recognizeObstacles():
                 poopDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
+                dumpsterDetected.clear()
             elif colorDetectedLeft in lakeColor:
                 lakeDetectedLeft.set()  # set the flag for a lake being detected left, note that you will need to reset it once read
                 poopDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
+                dumpsterDetected.clear()
             elif colorDetectedLeft in cubesToAvoid:
                 obstacleDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 poopDetectedLeft.clear()
+                dumpsterDetected.clear()
             elif colorDetectedLeft in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
                 poopDetectedLeft.clear()
+                dumpsterDetected.clear()
 
             if colorDetectedRight in poop:
                 poopDetectedRight.set()
                 obstacleDetectedRight.clear()
                 lakeDetectedRight.clear()
+                dumpsterDetected.clear()
             elif colorDetectedRight in lakeColor:
                 lakeDetectedRight.set()
                 poopDetectedRight.clear()
                 obstacleDetectedRight.clear()
+                dumpsterDetected.clear()
             elif colorDetectedRight in cubesToAvoid:
                 obstacleDetectedRight.set()
                 poopDetectedRight.clear()
                 lakeDetectedRight.clear()
+                dumpsterDetected.clear()
             elif colorDetectedRight in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
                 poopDetectedRight.clear()
+                dumpsterDetected.clear()
 
             if colorDetectedLeft == "yellowFloor" or colorDetectedRight == "yellowFloor": #
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
                 poopDetectedRight.clear()
                 dumpsterDetected.set()
+                
 
             # sleep(0.25) in case a sleep is necessary to sync information between sensors
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
