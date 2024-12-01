@@ -10,6 +10,7 @@ start_time2= None
 gyro_readings=[]
 is_going_home = False
 count = 0
+sweep_counter = 0
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
@@ -187,6 +188,7 @@ def move_fwd_until_wall(angle, dist):
         global avoidance_offset
         global count
         global is_going_home
+        global sweep_counter
 
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
@@ -203,14 +205,17 @@ def move_fwd_until_wall(angle, dist):
                 #     print("LAKE LEFT AND RIGHT")
                 #     turn_until_no_lake("both")
                 if (lakeDetectedLeft.is_set()):
+                    sweep_counter = 0
                     print("LAKE LEFT")
                     turn_until_no_lake("left")
                 elif (lakeDetectedRight.is_set()):
+                    sweep_counter = 0
                     print("LAKE RIGHT")
                     turn_until_no_lake("right")
                 
                 # obstacle avoidance
                 if (obstacleDetectedLeft.is_set()):
+                    sweep_counter = 0
                     print("OBSTACLE LEFT")
                     if (US_SENSOR.get_value() < 25):  # not enough space to go around
                         move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
@@ -218,6 +223,7 @@ def move_fwd_until_wall(angle, dist):
                     else:
                         avoid_obstacle("left",LEFT_MOTOR, RIGHT_MOTOR, US_SENSOR)
                 if (obstacleDetectedRight.is_set()):
+                    sweep_counter = 0 
                     print("OBSTACLE RIGHT")
                     if (US_SENSOR.get_value() < 25):  # not enough space to go around
                         move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
@@ -227,14 +233,22 @@ def move_fwd_until_wall(angle, dist):
                 
                 # poop pickup
                 if (poopDetectedLeft.is_set()):
+                    sweep_counter = 0
                     print("POOP LEFT")
                     detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                     count += 1
                 if (poopDetectedRight.is_set()):
+                    sweep_counter = 0 
                     print("POOP RIGHT")
                     
                     detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                     count += 1
+
+                sweep_counter += 1
+                if sweep_counter >= 13:
+                    sweep_counter = 0
+                    periodic_sweep(LEFT_MOTOR, RIGHT_MOTOR, GYRO)
+
             
             # correcting trajectory
             check_for_wall()
@@ -363,6 +377,30 @@ def recognizeObstacles():
         print(e)
     finally:
         exit()
+
+def periodic_sweep(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, GYRO : EV3GyroSensor):
+    original_angle = GYRO.get_abs_measure()
+    target_angle = original_angle + 60
+    count = 0
+    while (GYRO.get_abs_measure() < target_angle):
+        rotate(20, LEFT_MOTOR,RIGHT_MOTOR)
+        count += 1
+        if count>= 4 :
+            break
+        if poopDetectedLeft.is_set() or poopDetectedRight.is_set():
+            detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+    count = 0
+    rotate(-60, LEFT_MOTOR,RIGHT_MOTOR)
+    target_angle = original_angle - 60
+    while (GYRO.get_abs_measure() > target_angle):
+        rotate(-20, LEFT_MOTOR, RIGHT_MOTOR)
+        count += 1
+        if count>= 4 :
+            break
+        if poopDetectedLeft.is_set() or poopDetectedRight.is_set():
+            detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+    rotate(60,LEFT_MOTOR,RIGHT_MOTOR)
+
 
 
 if __name__ == "__main__":
