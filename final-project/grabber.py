@@ -39,7 +39,7 @@ def grab_and_release(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, L
         LIFT_MOTOR.set_limits(LIFT_POWER_LIMIT, LIFT_SPEED_LIMIT)
 
         print("Lowering the arm")
-        LIFT_MOTOR.set_position_relative(-25)
+        LIFT_MOTOR.set_position_relative(-40)
 
         print("Opening claw")
         CLAW_MOTOR.set_position(-80)

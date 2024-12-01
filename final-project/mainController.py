@@ -9,7 +9,7 @@ start_time = time.time()
 start_time2= None
 gyro_readings=[]
 is_going_home = False
-count = 3
+count = 0
 going_left = True
 avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
 # sensors
@@ -56,22 +56,30 @@ def Eback_to_start():
         start_angle = 0
     else:
         start_angle = -180
+    counter = 0
     while not dumpsterDetected.is_set():
+        
+        print("not home yet")
         move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
-        rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
-        start_angle += 90
-        move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
-        rotate(90,LEFT_MOTOR, RIGHT_MOTOR)
-        start_angle += 90
-        going_left = not going_left
+        if (dumpsterDetected.is_set()):
+            break
+
+        if (counter > 4):
+            move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
+            counter = 0
+
+        rotate(start_angle + 90 - GYRO.get_abs_measure() ,LEFT_MOTOR, RIGHT_MOTOR)
         time.sleep(0.1)
+        counter += 1
+        start_angle += 90
 
 
     rotate(0 - GYRO.get_abs_measure(),LEFT_MOTOR, RIGHT_MOTOR)
+    move_fwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
     print("Found yellow")
     dump_storage(CLAW_MOTOR,LIFT_MOTOR)
     print("Dumping now")
-    move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
+    move_bwd(0.35, LEFT_MOTOR, RIGHT_MOTOR)
 
     exit()
 
@@ -110,15 +118,18 @@ def turn_until_no_lake(direction: str):
 
     # if both sensors detect lake, make a bigger turn to ensure
     # the robot doesn't get stuck in infinite corrections
-    if direction == "both":
-        move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
-        rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
-        lakeDetectedLeft.clear()
-        lakeDetectedRight.clear()
-        return
+    # if direction == "both":
+    #     move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
+    #     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
+    #     lakeDetectedLeft.clear()
+    #     lakeDetectedRight.clear()
+    #     return
 
     move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
-    rotate(30, LEFT_MOTOR, RIGHT_MOTOR)
+    if (going_left):
+        rotate(-30, LEFT_MOTOR, RIGHT_MOTOR)
+    else:
+        rotate(30, LEFT_MOTOR, RIGHT_MOTOR)
     lakeDetectedLeft.clear()
     lakeDetectedRight.clear()
 
@@ -188,10 +199,10 @@ def move_fwd_until_wall(angle, dist):
         while (US_SENSOR.get_value() > dist):
             if not is_going_home :
                 # lake avoidance
-                if (lakeDetectedLeft.is_set() and lakeDetectedRight.is_set()):
-                    print("LAKE LEFT AND RIGHT")
-                    turn_until_no_lake("both")
-                elif (lakeDetectedLeft.is_set()):
+                # if (lakeDetectedLeft.is_set() and lakeDetectedRight.is_set()):
+                #     print("LAKE LEFT AND RIGHT")
+                #     turn_until_no_lake("both")
+                if (lakeDetectedLeft.is_set()):
                     print("LAKE LEFT")
                     turn_until_no_lake("left")
                 elif (lakeDetectedRight.is_set()):
@@ -230,6 +241,8 @@ def move_fwd_until_wall(angle, dist):
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
+            if (dumpsterDetected.is_set() and is_going_home):
+                break
             # initialize go back to start sequence
             if (((count >= 6 ) or (time.time() - start_time > 135)) and not is_going_home):
                 is_going_home = True
@@ -294,33 +307,32 @@ def recognizeObstacles():
             # map color data to a known sample of colors
             colorDetectedLeft = returnClosestValue(rgbL[0], rgbL[1], rgbL[2])
             colorDetectedRight = returnClosestValue(rgbR[0], rgbR[1], rgbR[2])
+            dumpsterDetected.clear()
 
             if colorDetectedLeft in poop:
                 poopDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
-                dumpsterDetected.clear()
+                
             elif colorDetectedLeft in lakeColor:
                 lakeDetectedLeft.set()  # set the flag for a lake being detected left, note that you will need to reset it once read
                 poopDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
-                dumpsterDetected.clear()
             elif colorDetectedLeft in cubesToAvoid:
                 obstacleDetectedLeft.set()
                 lakeDetectedLeft.clear()
                 poopDetectedLeft.clear()
-                dumpsterDetected.clear()
+                
             elif colorDetectedLeft in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedLeft.clear()
                 obstacleDetectedLeft.clear()
                 poopDetectedLeft.clear()
-                dumpsterDetected.clear()
-
+                
             if colorDetectedRight in poop:
                 poopDetectedRight.set()
                 obstacleDetectedRight.clear()
                 lakeDetectedRight.clear()
-                dumpsterDetected.clear()
+                
             elif colorDetectedRight in lakeColor:
                 lakeDetectedRight.set()
                 poopDetectedRight.clear()
@@ -330,18 +342,19 @@ def recognizeObstacles():
                 obstacleDetectedRight.set()
                 poopDetectedRight.clear()
                 lakeDetectedRight.clear()
-                dumpsterDetected.clear()
+              
             elif colorDetectedRight in ignore:  # if green detected reset all other uncaught flags
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
                 poopDetectedRight.clear()
-                dumpsterDetected.clear()
-
+                
+            
             if colorDetectedLeft == "yellowFloor" or colorDetectedRight == "yellowFloor": #
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
                 poopDetectedRight.clear()
                 dumpsterDetected.set()
+            
                 
 
             # sleep(0.25) in case a sleep is necessary to sync information between sensors
