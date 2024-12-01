@@ -67,7 +67,7 @@ def Eback_to_start():
         time.sleep(0.1)
 
 
-    rotate(180,LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(0 - GYRO.get_abs_measure(),LEFT_MOTOR, RIGHT_MOTOR)
     print("Found yellow")
     dump_storage(CLAW_MOTOR,LIFT_MOTOR)
     print("Dumping now")
@@ -80,7 +80,7 @@ def check_for_wall():
     global gyro_readings
 
     GYRO_THRESHOLD = 2
-    TIME_LIMIT = 5
+    TIME_LIMIT = 15
     
     current_angle = GYRO.get_value()
     #print(f"Current Angle: {current_angle}")
@@ -92,8 +92,8 @@ def check_for_wall():
         gyro_variation = max(gyro_readings) - min(gyro_readings)
     else:
         gyro_variation = 0
-    distance_from_wall = US_SENSOR.get_value()
-    if (gyro_variation<GYRO_THRESHOLD and distance_from_wall < MIN_DIST_FROM_WALL):
+    #distance_from_wall = US_SENSOR.get_value()
+    if (gyro_variation<GYRO_THRESHOLD):
         if start_time2 == None:
             start_time2 = time.time()
         
@@ -111,20 +111,16 @@ def turn_until_no_lake(direction: str):
     # if both sensors detect lake, make a bigger turn to ensure
     # the robot doesn't get stuck in infinite corrections
     if direction == "both":
+        move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
         rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
         lakeDetectedLeft.clear()
         lakeDetectedRight.clear()
         return
 
-    if direction == "left":
-        i = 1
-    else:
-        i = -1
-    while (lakeDetectedRight.is_set() or lakeDetectedLeft.is_set()):
-        rotate(20*i, LEFT_MOTOR, RIGHT_MOTOR)
-        lakeDetectedLeft.clear()
-        lakeDetectedRight.clear()
-    move_bwd(0.02, LEFT_MOTOR, RIGHT_MOTOR)
+    move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
+    rotate(30, LEFT_MOTOR, RIGHT_MOTOR)
+    lakeDetectedLeft.clear()
+    lakeDetectedRight.clear()
 
 
 def rotate_at_wall(dir: str):
@@ -184,8 +180,8 @@ def move_fwd_until_wall(angle, dist):
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
         #print("curr distance to wall is : " + str(US_SENSOR.get_value()))
-        print("distance to stop at is : " + str(dist))
-        print("angle to follow is :" + str(angle))
+        #print("distance to stop at is : " + str(dist))
+        #print("angle to follow is :" + str(angle))
         #print("absolute angle is :" + str(GYRO.get_abs_measure()))
 
 
@@ -228,8 +224,9 @@ def move_fwd_until_wall(angle, dist):
                     
                     detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                     count += 1
+            
+            # correcting trajectory
             check_for_wall()
-            # correct trajectory
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
