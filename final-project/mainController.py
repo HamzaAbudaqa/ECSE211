@@ -57,6 +57,12 @@ def Eback_to_start():
         start_angle = 0
     else:
         start_angle = -180
+
+    rotate_amount = GYRO.get_abs_measure() - start_angle
+    move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
+    if abs(rotate_amount) > 5:
+        rotate(rotate_amount, LEFT_MOTOR, RIGHT_MOTOR)
+
     counter = 0
     while not dumpsterDetected.is_set():
         
@@ -245,7 +251,7 @@ def move_fwd_until_wall(angle, dist):
                     count += 1
 
                 sweep_counter += 1
-                if sweep_counter >= 13:
+                if sweep_counter >= 20:
                     sweep_counter = 0
                     periodic_sweep(LEFT_MOTOR, RIGHT_MOTOR, GYRO)
 
@@ -389,6 +395,9 @@ def periodic_sweep(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, GYRO : EV3GyroSensor
             break
         if poopDetectedLeft.is_set() or poopDetectedRight.is_set():
             detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+        elif obstacleDetectedRight.is_set() or obstacleDetectedLeft.is_set():
+            rotate(-70, LEFT_MOTOR,RIGHT_MOTOR)
+            return
     count = 0
     rotate(-60, LEFT_MOTOR,RIGHT_MOTOR)
     target_angle = original_angle - 60
@@ -399,6 +408,9 @@ def periodic_sweep(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, GYRO : EV3GyroSensor
             break
         if poopDetectedLeft.is_set() or poopDetectedRight.is_set():
             detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+        elif obstacleDetectedRight.is_set() or obstacleDetectedLeft.is_set():
+            rotate(70, LEFT_MOTOR,RIGHT_MOTOR)
+            return
     rotate(60,LEFT_MOTOR,RIGHT_MOTOR)
 
 
