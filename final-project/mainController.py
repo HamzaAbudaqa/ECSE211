@@ -87,7 +87,7 @@ def Eback_to_start():
     dump_storage(CLAW_MOTOR,LIFT_MOTOR)
     # move backwards into start square
     move_bwd(0.35, LEFT_MOTOR, RIGHT_MOTOR)
-    ## after dumping the navigation program terminates
+    # after dumping the navigation program terminates
     exit()
 
 def check_for_wall():
@@ -194,13 +194,10 @@ def move_fwd_until_wall(angle, dist):
 
         while (US_SENSOR.get_value() > dist):
             if not is_going_home :
-                if (lakeDetectedLeft.is_set()):
+                # lake avoidance
+                if (lakeDetectedLeft.is_set() or lakeDetectedRight.is_set()):
                     sweep_counter = 0
-                    print("LAKE LEFT")
-                    turn_until_no_lake()
-                elif (lakeDetectedRight.is_set()):
-                    sweep_counter = 0
-                    print("LAKE RIGHT")
+                    print("LAKE DETECTED")
                     turn_until_no_lake()
                 
                 # obstacle avoidance
@@ -222,15 +219,9 @@ def move_fwd_until_wall(angle, dist):
                         avoid_obstacle("right",LEFT_MOTOR, RIGHT_MOTOR, US_SENSOR)
                 
                 # poop pickup
-                if (poopDetectedLeft.is_set()):
+                if (poopDetectedLeft.is_set() or poopDetectedRight.is_set()):
                     sweep_counter = 0
-                    print("POOP LEFT")
-                    detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-                    count += 1
-                if (poopDetectedRight.is_set()):
-                    sweep_counter = 0 
-                    print("POOP RIGHT")
-                    
+                    print("POOP DETECTED")
                     detect_and_grab(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
                     count += 1
 
@@ -351,8 +342,7 @@ def recognizeObstacles():
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
                 poopDetectedRight.clear()
-                
-            
+                 
             if colorDetectedLeft == "yellowFloor" or colorDetectedRight == "yellowFloor": # trash area
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
