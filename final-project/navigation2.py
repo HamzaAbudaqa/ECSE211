@@ -1,4 +1,4 @@
-from utils.brick import EV3GyroSensor, Motor, EV3UltrasonicSensor
+from utils.brick import Motor, EV3UltrasonicSensor
 import time, math
 from colorSensorUtils import *
 
@@ -16,8 +16,6 @@ POWER_LIMIT = 400
 SPEED_LIMIT = 720
 
 ROBOT_LEN = 0.15  # m
-MAP_SIZE = 120  # cm
-NB_S = int(MAP_SIZE / (ROBOT_LEN*100))  # number of back and forth s motions to cover the entire board
 FWD_SPEED = 250
 TRN_SPEED = 320
 
@@ -74,11 +72,6 @@ def move_bwd(distance, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
         print(error)
 
 
-def stop(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    "Stop left and right motors"
-    RIGHT_MOTOR.set_power(0)
-    LEFT_MOTOR.set_power(0)
-
 def pause(duration, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     "Temporarily pauses the motors for a set duration"
     rightMotorPower = RIGHT_MOTOR.get_power()
@@ -89,14 +82,20 @@ def pause(duration, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
     RIGHT_MOTOR.set_power(rightMotorPower)
     LEFT_MOTOR.set_power(leftMotorPower)
 
+
 def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
-    if (abs(error) <= DEADBAND):  # no correction
+    """
+    Implementation of a bang-bang controller to adjust the angle of the robot.
+    This is done by increasing the speed of a single wheel to offset the error,
+    if it is above the predetermined deadband
+    """
+    if (abs(error) <= DEADBAND): # no correction
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
-    elif (error > 0):  # angle too big
+    elif (error > 0): # angle too big
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
-    else:  # angle too small
+    else: # angle too small
         LEFT_MOTOR.set_dps(FWD_SPEED + DELTA_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
     time.sleep(US_POLL_DELAY)
@@ -104,28 +103,34 @@ def bang_bang_controller(error: int, LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor):
 
 def avoid_obstacle(direction: str, LEFT_MOTOR:Motor,RIGHT_MOTOR : Motor, US_SENSOR : EV3UltrasonicSensor):
     """
-    Method to avoid an obstacle (colored cube) following a predertermined path,
-    and the return to its start position
+    Method to avoid an obstacle (colored cube) by turning for a set angle. The function checks
+    if there is a wall blocking the optimal path before making a correction.
+    The function expects the bang-bang controller to set the robot back to its original path
+    after its execution.
     """
-    # move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
-    smallMovement = 0.05
-    bigMovement = 0.1
-
+    # move backwards, further from the obstacke
     move_bwd(0.08, LEFT_MOTOR, RIGHT_MOTOR)
+
     if (direction == "left"):
         rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall > 10):
+            # make a small correction on the right
             rotate(-65, LEFT_MOTOR, RIGHT_MOTOR)
-        else:
+        else: 
+            # robot is too close to wall to avoid by the right
+            # make a bigger correction on the left
             rotate(-120, LEFT_MOTOR, RIGHT_MOTOR)
     else:
         rotate(-90, LEFT_MOTOR, RIGHT_MOTOR)
         time.sleep(0.1)
         distanceFromWall = US_SENSOR.get_value()
         if (distanceFromWall > 10):
+            # make a small correction on the left
             rotate(65, LEFT_MOTOR, RIGHT_MOTOR)
-        else:
+        else: 
+            # robot is too close to wall to avoid by the left
+            # make a bigger correction on the right
             rotate(120, LEFT_MOTOR, RIGHT_MOTOR)
 

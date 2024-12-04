@@ -8,11 +8,11 @@ start_time = time.time()
 
 start_time2= None
 gyro_readings=[]
-is_going_home = False
-count = 0
+is_going_home = False # has Eback_to_start been called already
+count = 0 # number of poops that have been picked up
 sweep_counter = 0
-going_left = True
-avoiding_lake = False # will be necessary to make sure we do not avoid obstacles and end up in the lake
+going_left = True # going_left means the gyro is at 0
+
 # sensors
 GYRO = EV3GyroSensor(port=1, mode="abs")
 US_SENSOR = EV3UltrasonicSensor(2)
@@ -26,7 +26,6 @@ LEFT_MOTOR = Motor('D')
 CLAW_MOTOR = Motor('B')
 LIFT_MOTOR = Motor('C')
 
-avoidance_offset = 0 #keeps track of how far right (>0) or left(<0) we have gone in one
 
 def init_motors():
     "Initializes all 4 motors"
@@ -65,13 +64,13 @@ def Eback_to_start():
 
     counter = 0
     while not dumpsterDetected.is_set():
-        
-        print("not home yet")
+        # follow the walls
         move_fwd_until_wall(start_angle, MIN_DIST_FROM_WALL)
-        if (dumpsterDetected.is_set()):
+
+        if (dumpsterDetected.is_set()): # we have arrived at the trash area
             break
 
-        if (counter > 4):
+        if (counter > 4): # the robot must be stuck at a wall and unable to turn
             move_bwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
             counter = 0
 
@@ -80,14 +79,15 @@ def Eback_to_start():
         counter += 1
         start_angle += 90
 
-
+    # rotate to face away from trash area
     rotate(0 - GYRO.get_abs_measure(),LEFT_MOTOR, RIGHT_MOTOR)
+    # align the storage unit and trash area
     move_fwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
-    print("Found yellow")
+    # dump
     dump_storage(CLAW_MOTOR,LIFT_MOTOR)
-    print("Dumping now")
+    # move backwards into start square
     move_bwd(0.35, LEFT_MOTOR, RIGHT_MOTOR)
-
+    ## after dumping the navigation program terminates
     exit()
 
 def check_for_wall():
@@ -98,7 +98,6 @@ def check_for_wall():
     TIME_LIMIT = 15
     
     current_angle = GYRO.get_value()
-    #print(f"Current Angle: {current_angle}")
     gyro_readings.append(current_angle)
     
     if len(gyro_readings) > 10:
@@ -107,7 +106,7 @@ def check_for_wall():
         gyro_variation = max(gyro_readings) - min(gyro_readings)
     else:
         gyro_variation = 0
-    #distance_from_wall = US_SENSOR.get_value()
+
     if (gyro_variation<GYRO_THRESHOLD):
         if start_time2 == None:
             start_time2 = time.time()
@@ -121,22 +120,14 @@ def check_for_wall():
             start_time2 = None
 
 
-def turn_until_no_lake(direction: str):
-
-    # if both sensors detect lake, make a bigger turn to ensure
-    # the robot doesn't get stuck in infinite corrections
-    # if direction == "both":
-    #     move_bwd(0.05, LEFT_MOTOR, RIGHT_MOTOR)
-    #     rotate(90, LEFT_MOTOR, RIGHT_MOTOR)
-    #     lakeDetectedLeft.clear()
-    #     lakeDetectedRight.clear()
-    #     return
-
+def turn_until_no_lake():
+    "avoids a lake by turning rotating the robot 30 degrees"
     move_bwd(0.03, LEFT_MOTOR, RIGHT_MOTOR)
     if (going_left):
         rotate(-30, LEFT_MOTOR, RIGHT_MOTOR)
     else:
         rotate(30, LEFT_MOTOR, RIGHT_MOTOR)
+    # reset the thread events
     lakeDetectedLeft.clear()
     lakeDetectedRight.clear()
 
@@ -190,8 +181,6 @@ def move_fwd_until_wall(angle, dist):
     """
 
     try:
-        global avoiding_lake
-        global avoidance_offset
         global count
         global is_going_home
         global sweep_counter
@@ -206,18 +195,14 @@ def move_fwd_until_wall(angle, dist):
 
         while (US_SENSOR.get_value() > dist):
             if not is_going_home :
-                # lake avoidance
-                # if (lakeDetectedLeft.is_set() and lakeDetectedRight.is_set()):
-                #     print("LAKE LEFT AND RIGHT")
-                #     turn_until_no_lake("both")
                 if (lakeDetectedLeft.is_set()):
                     sweep_counter = 0
                     print("LAKE LEFT")
-                    turn_until_no_lake("left")
+                    turn_until_no_lake()
                 elif (lakeDetectedRight.is_set()):
                     sweep_counter = 0
                     print("LAKE RIGHT")
-                    turn_until_no_lake("right")
+                    turn_until_no_lake()
                 
                 # obstacle avoidance
                 if (obstacleDetectedLeft.is_set()):
@@ -276,20 +261,20 @@ def move_fwd_until_wall(angle, dist):
 
 
 def do_s_shape():
-
-    global avoidance_offset
-
     if (going_left):
         move_fwd_until_wall(0, MIN_DIST_FROM_WALL)  # go straight
         rotate_at_wall("left")  # going to angle -180 on gyro
     else:
         move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)  # go straight
         rotate_at_wall("right")  # going to angle 0 on gyro
-    avoidance_offset = 0
 
 
 def navigation_program():
-    "Do an entire sweep of the board while doing 'S' motions"
+    """
+    Do an entire sweep of the board while doing 'S' motions.
+    All other navigation and poop pickup functions are called within this
+    loop.
+    """
     try:
         print("Starting board sweeping started")
         while True:
@@ -297,7 +282,8 @@ def navigation_program():
     except KeyboardInterrupt:
         print("Navigation program terminated")
     finally:
-        stop(LEFT_MOTOR, RIGHT_MOTOR)
+        RIGHT_MOTOR.set_power(0)
+        LEFT_MOTOR.set_power(0)
         reset_brick()
 
 
@@ -319,7 +305,6 @@ dumpsterDetected = threading.Event()
 def recognizeObstacles():
     print("started color thread")
     try:
-        print("tryingToDectColor")
         while True:
             rgbL = getAveragedValues(15, CS_L)
             rgbR = getAveragedValues(15, CS_R)  # Get color data
@@ -369,22 +354,24 @@ def recognizeObstacles():
                 poopDetectedRight.clear()
                 
             
-            if colorDetectedLeft == "yellowFloor" or colorDetectedRight == "yellowFloor": #
+            if colorDetectedLeft == "yellowFloor" or colorDetectedRight == "yellowFloor": # trash area
                 lakeDetectedRight.clear()
                 obstacleDetectedRight.clear()
                 poopDetectedRight.clear()
                 dumpsterDetected.set()
             
-                
-
-            # sleep(0.25) in case a sleep is necessary to sync information between sensors
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         reset_brick()
         print(e)
     finally:
         exit()
 
+
 def periodic_sweep(LEFT_MOTOR : Motor, RIGHT_MOTOR : Motor, GYRO : EV3GyroSensor):
+    """
+    stops and does a left to right sweeping motion to detect obstacles and poops
+    in the robot's blind spots
+    """
     original_angle = GYRO.get_abs_measure()
     target_angle = original_angle + 60
     count = 0
@@ -427,8 +414,6 @@ if __name__ == "__main__":
          colorSensorThread.start()
          colorSensorThread.join()
          navigationThread.join()
-        #avoid_obstacle("left")
-         #Eback_to_start()
     except BaseException as e:  # capture all exceptions including KeyboardInterrupt (Ctrl-C)
         print(e)
     finally:

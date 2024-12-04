@@ -2,12 +2,6 @@ from utils.brick import *
 from time import sleep
 from navigation2 import move_bwd, move_fwd
 
-# RIGHT_MOTOR = Motor('A')
-# LEFT_MOTOR = Motor('D')
-# CLAW_MOTOR = Motor('B')
-# LIFT_MOTOR = Motor('C')
-
-
 GRAB_POSITION = 300
 HIT_POSITION = 20
 LIFT_UP_POSITION = -180
@@ -25,7 +19,6 @@ LIFT_SPEED_LIMIT = 150
 DUMP_WAIT_TIME = 3
 
 
-
 def grab_and_release(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
     ''' Function to grab a block lift it & release it into storage unit '''
 
@@ -38,36 +31,29 @@ def grab_and_release(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, L
         CLAW_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
         LIFT_MOTOR.set_limits(LIFT_POWER_LIMIT, LIFT_SPEED_LIMIT)
 
-        print("Lowering the arm")
+        # lowering the arm slightl
         LIFT_MOTOR.set_position_relative(-40)
-
-        print("Opening claw")
+        # opening the claw
         CLAW_MOTOR.set_position(-80)
         sleep(1)
-
-        print("Lowering the arm")
+        # lowering the arm completely
         LIFT_MOTOR.set_position_relative(-250)
         sleep(2)
-
+        # move foward (to the poop)
         move_fwd(0.1, LEFT_MOTOR, RIGHT_MOTOR)
         sleep(0.05)
-
-        print("Closing claw")
+        # closing claw
         CLAW_MOTOR.set_position(25)
         sleep(1)
-
-        print("lifting arm now")
+        # lifting arm until sotrage unit
         LIFT_MOTOR.set_position(-25)
         sleep(2)
-
-        print("Releasing claw")
+        # releasing claw (putting block in storage unit)
         CLAW_MOTOR.set_position(-40)
         sleep(2)
-
-        print("Returning claw to initial position")
+        # returning claw to initial position
         LIFT_MOTOR.set_position(-25)
-
-        print("Closing claw")
+        # closing claw
         CLAW_MOTOR.set_position(0)
         sleep(1)
 
@@ -87,52 +73,54 @@ def dump_storage(CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
         CLAW_MOTOR.set_limits(POWER_LIMIT, SPEED_LIMIT)
         LIFT_MOTOR.set_limits(LIFT_POWER_LIMIT, LIFT_SPEED_LIMIT)
 
-        print("Starting the dumping operation")
-
-        print("lowering the arm slightly")
+        # lowering the arm slightly
         LIFT_MOTOR.set_position(-230)
         sleep(1)
-
-        print("Rotating claw to hitting position")
+        # Rotating claw to hitting position
         CLAW_MOTOR.set_position(-55)
         sleep(1)
-
-        print("Hitting storage unit with momentum")
+        # Hitting storage unit with momentum
         LIFT_MOTOR.set_limits(HIGH_POWER_LIMIT, HIGH_SPEED_LIMIT)
         sleep(1)
-
-        print("Resetting to initial positions")
-        # CLAW_MOTOR.set_position(initial_claw_position)
+        # Resetting to initial positions
         LIFT_MOTOR.set_position(initial_lift_position + 40)
         sleep(1)
         LIFT_MOTOR.set_position(initial_lift_position - 40)
         sleep(1)
-
-        print("Mission accomplished")
 
     except IOError as error:
         print(f"Error during dumping operation: {error}")
 
 
 def detect_and_grab(LEFT_MOTOR: Motor, RIGHT_MOTOR: Motor, CLAW_MOTOR: Motor, LIFT_MOTOR: Motor):
+    # move backward to give space for the claw to come down
     move_bwd(0.14, LEFT_MOTOR, RIGHT_MOTOR)
     sleep(2)
+    # grab the block and place it into the storage unit
     grab_and_release(LEFT_MOTOR, RIGHT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
 
 
-# if __name__ == "__main__":
-#     try:
-#         LIFT_MOTOR.reset_encoder()
-#         CLAW_MOTOR.reset_encoder()
-#         RIGHT_MOTOR.reset_encoder()
-#         LEFT_MOTOR.reset_encoder()
-        
-# #         detect_and_grab(RIGHT_MOTOR, LEFT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
-#         dump_storage(CLAW_MOTOR, LIFT_MOTOR)
-#     except BaseException as e:
-#         print(e)
-#     finally:
-#         reset_brick()
+
+if __name__ == "__main__":
+
+    print("testing grabber")
+
+    RIGHT_MOTOR = Motor('A')
+    LEFT_MOTOR = Motor('D')
+    CLAW_MOTOR = Motor('B')
+    LIFT_MOTOR = Motor('C')
+    LIFT_MOTOR.reset_encoder()
+    CLAW_MOTOR.reset_encoder()
+    RIGHT_MOTOR.reset_encoder()
+    LEFT_MOTOR.reset_encoder()
+
+    try:
+        detect_and_grab(RIGHT_MOTOR, LEFT_MOTOR, CLAW_MOTOR, LIFT_MOTOR)
+        dump_storage(CLAW_MOTOR, LIFT_MOTOR)
+    except BaseException as e:
+        print(e)
+    finally:
+        reset_brick()
 
 
 
