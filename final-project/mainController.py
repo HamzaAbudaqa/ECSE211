@@ -107,7 +107,7 @@ def check_for_wall():
     else:
         gyro_variation = 0
 
-    if (gyro_variation<GYRO_THRESHOLD):
+    if (gyro_variation < GYRO_THRESHOLD):
         if start_time2 == None:
             start_time2 = time.time()
         
@@ -132,7 +132,7 @@ def turn_until_no_lake():
     lakeDetectedRight.clear()
 
 
-def rotate_at_wall(dir: str):
+def rotate_at_wall():
     """
     Rotates the robot in the given direction and positions itself in
     the next row to sweep
@@ -144,23 +144,25 @@ def rotate_at_wall(dir: str):
         # go to -90 deg on gyro
         rotate(-90 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
 
-        if (US_SENSOR.get_value() <= MIN_DIST_FROM_WALL):
+        if (US_SENSOR.get_value() <= MIN_DIST_FROM_WALL): # arrived at the end of the board
             if (going_left):
                 # go to right wall
                 rotate(-180 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
                 move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
+            # go back to the start position to keep sweeping
             rotate(-270 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
             move_fwd_until_wall(-270, MIN_DIST_FROM_WALL)
             rotate(0 - GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
-            #print(str(GYRO.reset_measure()))
             going_left = True
             return
 
+        # move foward for the length of the robot
         LEFT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
         RIGHT_MOTOR.set_position_relative(int(ROBOT_LEN * DIST_TO_DEG))
         wait_for_motor(RIGHT_MOTOR)
 
-        if (dir == "right"):
+        # rotate in direction of the new path
+        if (not going_left):
             # go to 0 deg on gyro
             rotate(- GYRO.get_abs_measure(), LEFT_MOTOR, RIGHT_MOTOR)
         else:
@@ -175,7 +177,9 @@ def rotate_at_wall(dir: str):
 def move_fwd_until_wall(angle, dist):
     """
     Makes the robot go in a straight line at the given angle (absolute angle
-    rotated since start) by implementing the bang bang controller
+    rotated since start) by implementing the bang bang controller.
+
+    Calls obstacle avoidance and poop pickup.
 
     The robot stops once it finds itself at distance dist from the wall
     """
@@ -187,11 +191,6 @@ def move_fwd_until_wall(angle, dist):
 
         LEFT_MOTOR.set_dps(FWD_SPEED)
         RIGHT_MOTOR.set_dps(FWD_SPEED)
-        #print("curr distance to wall is : " + str(US_SENSOR.get_value()))
-        #print("distance to stop at is : " + str(dist))
-        #print("angle to follow is :" + str(angle))
-        #print("absolute angle is :" + str(GYRO.get_abs_measure()))
-
 
         while (US_SENSOR.get_value() > dist):
             if not is_going_home :
@@ -240,16 +239,16 @@ def move_fwd_until_wall(angle, dist):
                     sweep_counter = 0
                     periodic_sweep(LEFT_MOTOR, RIGHT_MOTOR, GYRO)
 
-            
-            # correcting trajectory
+            # correct the robot trajectory if needed
             check_for_wall()
             time.sleep(0.1)
             bang_bang_controller(GYRO.get_abs_measure() - angle, LEFT_MOTOR, RIGHT_MOTOR)
             
             if (dumpsterDetected.is_set() and is_going_home):
                 break
-            # initialize go back to start sequence
+            
             if (((count >= 6 ) or (time.time() - start_time > 135)) and not is_going_home):
+                # initialize go back to start sequence
                 is_going_home = True
                 Eback_to_start()
                 break
@@ -261,12 +260,12 @@ def move_fwd_until_wall(angle, dist):
 
 
 def do_s_shape():
+    "move in a straight trajectory and rotate once the robot arrives at a wall"
     if (going_left):
-        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("left")  # going to angle -180 on gyro
+        move_fwd_until_wall(0, MIN_DIST_FROM_WALL)
     else:
-        move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)  # go straight
-        rotate_at_wall("right")  # going to angle 0 on gyro
+        move_fwd_until_wall(-180, MIN_DIST_FROM_WALL)
+    rotate_at_wall()
 
 
 def navigation_program():
