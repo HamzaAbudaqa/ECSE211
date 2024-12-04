@@ -276,7 +276,7 @@ def navigation_program():
     loop.
     """
     try:
-        print("Starting board sweeping started")
+        print("Starting board sweeping")
         while True:
             do_s_shape()
     except KeyboardInterrupt:
