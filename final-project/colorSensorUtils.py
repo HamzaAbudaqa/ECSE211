@@ -13,14 +13,6 @@ blueFloor = [1.558, 3.872, 4.856,"blueFloor"]
 redFloor = [8.984, 6.688, 2.47,"redFloor"]
 yellowFloor = [27.2, 18.784, 3.868, "yellowFloor"]
 
-consecutiveMin = 10
-consecutiveMax = 15
-
-lakeColor = ["blueFloor"]
-cubesToAvoid = ["greenCube", "purpleCube"]
-poop = ["yellowCube", "orangeCube"]
-ignore = ["greenFloor", "redFloor"]
-
 knownColors = [yellowFloor,greenCube,purpleCube,yellowCube,greenFloor,blueFloor,redFloor,orangeCube]
 
 
